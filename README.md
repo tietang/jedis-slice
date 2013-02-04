@@ -3,6 +3,7 @@
 **jedis** is a java client for Redis, as follow [jedis](https://github.com/xetorthio/jedis).
 
 #Usage#
+  example    src/test/java/fengfei/redis/example/SlicedRedisExample.java
 **example 1:**
 
 	        SlicedRedis redis = new SlicedRedis(
