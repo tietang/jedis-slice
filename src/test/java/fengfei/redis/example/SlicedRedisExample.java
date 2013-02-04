@@ -17,8 +17,8 @@ public class SlicedRedisExample {
 	 */
 	public static void main(String[] args) {
 		isPoolable = true;
-//		example1();
-//		example2();
+		// example1();
+		// example2();
 		example3();
 
 	}
@@ -55,12 +55,12 @@ public class SlicedRedisExample {
 		equalizer.setPlotter(new LoopPlotter());
 		// slice 0: master:192.168.1.3:6379 slave:192.168.1.4:6379
 		// 192.168.1.5:6379
-		Slice slice0 = Slice.createSlice(timeout, plotter, "172.17.20.16:6379",
+		Slice slice0 = Slice.createSlice(timeout, "172.17.20.16:6379",
 				"172.17.20.16:6380", "172.17.20.16:6381");
 		equalizer.addSlice(0l, slice0);
 		// slice 1: master:192.168.1.6:6379 slave:192.168.1.7:6379
 		// 192.168.1.8:6379
-		Slice slice1 = Slice.createSlice(timeout, plotter, "172.17.20.16:6379",
+		Slice slice1 = Slice.createSlice(timeout, "172.17.20.16:6379",
 				"172.17.20.16:6380", "172.17.20.16:6381");
 		equalizer.addSlice(1l, slice1);
 

@@ -13,7 +13,9 @@ public interface Equalizer {
 	 *            slice size
 	 * @return
 	 */
-	Slice get(String key);
+	SliceInfo get(byte[] key, int readWrite) throws Exception;
+
+	SliceInfo get(String key, int readWrite) throws Exception;
 
 	/**
 	 * add ext-map

@@ -1,24 +1,24 @@
 package fengfei.redis.slice;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import fengfei.redis.Plotter;
+import fengfei.redis.SliceInfo;
 
-public class Slice extends AbstractSlice  {
+public class Slice extends AbstractSlice {
 
-	public Slice(SliceInfo master, SliceInfo[] slaves, Plotter plotter) {
-		super(master, slaves, plotter);
+	public Slice(SliceInfo master, SliceInfo[] slaves) {
+		super(master, Arrays.asList(slaves));
 
 	}
 
-	public Slice(SliceInfo master, List<SliceInfo> slaves, Plotter plotter) {
-		this(master, slaves == null ? null : (slaves
-				.toArray(new SliceInfo[slaves.size()])), plotter);
+	public Slice(SliceInfo master, List<SliceInfo> slaves) {
+		super(master, slaves == null ? null : slaves);
 	}
 
-	public static Slice createSlice(int timeout, Plotter plotter,
-			String masterHost, String... slaveHosts) {
+	public static Slice createSlice(int timeout, String masterHost,
+			String... slaveHosts) {
 		String mhp[] = masterHost.split(":");
 		SliceInfo master = new SliceInfo(mhp[0], Integer.parseInt(mhp[1]),
 				timeout);
@@ -33,25 +33,8 @@ public class Slice extends AbstractSlice  {
 			}
 
 		}
-		return new Slice(master, slaves, plotter);
+		return new Slice(master, slaves);
 
-	}
-
-	public SliceInfo getMaster(byte[] key) {
-		return master;
-	}
-
-	public SliceInfo getAny(byte[] key) {
-		int index = plotter.get(key, slaveSize + 1);
-		return (slaves == null || index == slaves.length) ? master
-				: slaves[index];
-	}
-
-	public SliceInfo getNextSlave(byte[] key) {
-		if (slaves == null || slaves.length == 0) {
-			return master;
-		}
-		return slaves[plotter.get(key, slaveSize)];
 	}
 
 }

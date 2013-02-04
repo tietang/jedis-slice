@@ -1,6 +1,9 @@
 package fengfei.redis.slice;
 
-import fengfei.redis.Plotter;
+import java.util.ArrayList;
+import java.util.List;
+
+import fengfei.redis.SliceInfo;
 
 public abstract class AbstractSlice {
 
@@ -8,33 +11,43 @@ public abstract class AbstractSlice {
 	public final static int StatusError = 0;
 
 	protected SliceInfo master;
-
-	protected SliceInfo[] slaves;
-
-	protected int slaveSize;
-	protected Plotter plotter;
+	protected List<SliceInfo> slaves;
+	protected List<SliceInfo> cancelledSlaves = new ArrayList<>();
+	protected List<SliceInfo> configSlaves;
 
 	protected int status = StatusNormal;
 
-	public AbstractSlice(SliceInfo master, SliceInfo[] slaves, Plotter plotter) {
+	public AbstractSlice(SliceInfo master, List<SliceInfo> slaves) {
 		super();
 		this.master = master;
 		this.slaves = slaves;
-		this.slaveSize = slaves == null ? 0 : slaves.length;
-		this.plotter = plotter;
 
+		configSlaves = this.slaves;
+		if (slaves == null) {
+			slaves = new ArrayList<>();
+		}
 	}
-
- 
-
-	public abstract SliceInfo getMaster(byte[] key);
-
-	public abstract SliceInfo getAny(byte[] key);
-
-	public abstract SliceInfo getNextSlave(byte[] key);
 
 	public int getStatus() {
 		return status;
+	}
+
+	public void cancelSlave(SliceInfo sliceInfo) {
+		cancelledSlaves.add(sliceInfo);
+		slaves.remove(sliceInfo);
+	}
+
+	public void recoverSlave(SliceInfo sliceInfo) {
+		slaves.add(sliceInfo);
+		cancelledSlaves.remove(sliceInfo);
+	}
+
+	public List<SliceInfo> getConfigSlaves() {
+		return configSlaves;
+	}
+
+	public List<SliceInfo> getCancelledSlaves() {
+		return cancelledSlaves;
 	}
 
 }

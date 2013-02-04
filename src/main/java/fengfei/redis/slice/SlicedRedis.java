@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -23,6 +22,7 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 import fengfei.redis.Equalizer;
 import fengfei.redis.Plotter;
 import fengfei.redis.RedisComand;
+import fengfei.redis.SliceInfo;
 
 /**
  * <pre>
@@ -134,8 +134,7 @@ public class SlicedRedis {
 				slaveHosts = sliceSlaves.toArray(slaveHosts);
 			}
 			long id = lastId.get();
-			Slice slice = Slice.createSlice(timeout, plotter, masterHost,
-					slaveHosts);
+			Slice slice = Slice.createSlice(timeout, masterHost, slaveHosts);
 			equalizer.addSlice(id, slice);
 			createPool(slice, config);
 			lastId.incrementAndGet();
@@ -144,7 +143,9 @@ public class SlicedRedis {
 	}
 
 	private void createPool(Slice slice, GenericObjectPool.Config config) {
-		createPool(config, slice.master);
+		List<SliceInfo> master = new ArrayList<>();
+		master.add(slice.master);
+		createPool(config, master);
 		createPool(config, slice.slaves);
 	}
 
@@ -153,14 +154,16 @@ public class SlicedRedis {
 			Set<Entry<Long, Slice>> sets = equalizer.getSliceMap().entrySet();
 			for (Entry<Long, Slice> entry : sets) {
 				Slice slice = entry.getValue();
-				createPool(config, slice.master);
+				List<SliceInfo> master = new ArrayList<>();
+				master.add(slice.master);
+				createPool(config, master);
 				createPool(config, slice.slaves);
 			}
 		}
 	}
 
 	private void createPool(GenericObjectPool.Config config,
-			SliceInfo... sliceInfos) {
+			List<SliceInfo> sliceInfos) {
 		if (isPoolable) {
 
 			if (config == null) {
@@ -170,7 +173,8 @@ public class SlicedRedis {
 				ObjectPool<Jedis> pool = poolMap.get(info);
 				if (pool == null) {
 					pool = new GenericObjectPool<>(new PoolableRedisFactory(
-							info.host, info.port, info.timeout * 1000), config);
+							info.getHost(), info.getPort(),
+							info.getTimeout() * 1000), config);
 					poolMap.put(info, pool);
 					logger.debug("created pool for: " + info);
 				} else {
@@ -194,11 +198,9 @@ public class SlicedRedis {
 	 * @param masterHost
 	 * @param slaveHosts
 	 */
-	public void addHosts(int timeout, Plotter plotter, String masterHost,
-			String... slaveHosts) {
+	public void addHosts(int timeout, String masterHost, String... slaveHosts) {
 		long id = lastId.get();
-		Slice slice = Slice.createSlice(timeout, plotter, masterHost,
-				slaveHosts);
+		Slice slice = Slice.createSlice(timeout, masterHost, slaveHosts);
 		equalizer.addSlice(id, slice);
 		lastId.incrementAndGet();
 	}
@@ -280,26 +282,7 @@ public class SlicedRedis {
 					// argsClass = new Class<?>[] {};
 					key = String.valueOf(random.nextLong()).getBytes();
 				}
-				Slice redisSlice = equalizer.get(new String(key));
-				if (redisSlice == null) {
-					throw new Exception("can't find slice.");
-				}
-				// System.out.println("index: " + index);
-				// RedisSlice redisSlice = poolables.get(index);
-				switch (readWrite) {
-				case ReadWrite:
-					sliceInfo = redisSlice.getAny(key);
-					break;
-				case ReadOnly:
-					sliceInfo = redisSlice.getNextSlave(key);
-					break;
-				case WriteOnly:
-					sliceInfo = redisSlice.getMaster(key);
-					break;
-
-				default:
-					break;
-				}
+				sliceInfo = equalizer.get(new String(key), readWrite);
 
 				pool = poolMap.get(sliceInfo);
 				jedis = pool.borrowObject();
@@ -358,26 +341,7 @@ public class SlicedRedis {
 					// argsClass = new Class<?>[] {};
 					key = String.valueOf(random.nextLong()).getBytes();
 				}
-				Slice redisSlice = equalizer.get(new String(key));
-				if (redisSlice == null) {
-					throw new Exception("can't find slice.");
-				}
-				// System.out.println("index: " + index);
-				// RedisSlice redisSlice = poolables.get(index);
-				switch (readWrite) {
-				case ReadWrite:
-					sliceInfo = redisSlice.getAny(key);
-					break;
-				case ReadOnly:
-					sliceInfo = redisSlice.getNextSlave(key);
-					break;
-				case WriteOnly:
-					sliceInfo = redisSlice.getMaster(key);
-					break;
-
-				default:
-					break;
-				}
+				sliceInfo = equalizer.get(new String(key), readWrite);
 
 				jedis = jedisConnect(sliceInfo);
 				if (jedis == null) {
@@ -412,11 +376,11 @@ public class SlicedRedis {
 			throws JedisConnectionException {
 		try {
 			Jedis jedis = new Jedis(sliceInfo.getHost(), sliceInfo.getPort(),
-					sliceInfo.timeout);
+					sliceInfo.getTimeout());
 
 			jedis.connect();
-			if (null != sliceInfo.password) {
-				jedis.auth(sliceInfo.password);
+			if (null != sliceInfo.getPassword()) {
+				jedis.auth(sliceInfo.getPassword());
 			}
 			return jedis;
 		} catch (Exception e) {

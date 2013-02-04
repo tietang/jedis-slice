@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import fengfei.redis.Equalizer;
 import fengfei.redis.Plotter;
+import fengfei.redis.SliceInfo;
 
 /**
  * key -> hash % size->slice
@@ -49,5 +50,10 @@ public abstract class AbstractEqualizer implements Equalizer {
 	public Plotter getPlotter() {
 
 		return plotter;
+	}
+
+	@Override
+	public SliceInfo get(String key, int readWrite) throws Exception {
+		return get(key.getBytes(), readWrite);
 	}
 }

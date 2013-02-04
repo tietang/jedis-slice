@@ -1,4 +1,4 @@
-package fengfei.redis.slice;
+package fengfei.redis;
 
 public class SliceInfo {
 
@@ -7,6 +7,7 @@ public class SliceInfo {
 	protected final int timeout;
 	protected String password;
 	protected boolean isMaster = true;
+	protected Status status = Status.Normal;
 
 	public SliceInfo(String host, int port, int timeout) {
 		super();
@@ -42,6 +43,14 @@ public class SliceInfo {
 		return password;
 	}
 
+	public Status getStatus() {
+		return status;
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -73,9 +82,8 @@ public class SliceInfo {
 	@Override
 	public String toString() {
 		return "SliceInfo [host=" + host + ", port=" + port + ", timeout="
-				+ timeout + ", isMaster=" + isMaster + "]";
+				+ timeout + ", password=" + password + ", isMaster=" + isMaster
+				+ ", status=" + status + "]";
 	}
-
-	 
 
 }
