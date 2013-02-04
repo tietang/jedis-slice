@@ -52,7 +52,7 @@ public class SlicedRedisExample {
 		Plotter plotter = new LoopPlotter();
 		Equalizer equalizer = new LongModuleEqualizer();
 
-		equalizer.setPlotter(new LoopPlotter());
+		equalizer.setPlotter(plotter);
 		// slice 0: master:192.168.1.3:6379 slave:192.168.1.4:6379
 		// 192.168.1.5:6379
 		Slice slice0 = Slice.createSlice(timeout, "172.17.20.16:6379",
