@@ -1,11 +1,11 @@
-package fengfei.redis.slice;
+package fengfei.slice.impl;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import fengfei.redis.Equalizer;
-import fengfei.redis.Plotter;
-import fengfei.redis.SliceInfo;
+import fengfei.slice.Equalizer;
+import fengfei.slice.Plotter;
+import fengfei.slice.SliceInfo;
 
 /**
  * key -> hash % size->slice

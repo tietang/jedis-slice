@@ -1,7 +1,7 @@
-package fengfei.redis.slice;
+package fengfei.slice.impl;
 
 import redis.clients.util.Hashing;
-import fengfei.redis.Plotter;
+import fengfei.slice.Plotter;
 
 public class HashPlotter extends AbstractPlotter implements Plotter {
 	protected Hashing hashed = Hashing.MURMUR_HASH;

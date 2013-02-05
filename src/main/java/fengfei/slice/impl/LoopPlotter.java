@@ -1,8 +1,8 @@
-package fengfei.redis.slice;
+package fengfei.slice.impl;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import fengfei.redis.Plotter;
+import fengfei.slice.Plotter;
 
 public class LoopPlotter extends AbstractPlotter implements Plotter {
 	protected AtomicInteger next = new AtomicInteger();

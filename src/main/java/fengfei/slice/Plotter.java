@@ -1,6 +1,6 @@
-package fengfei.redis;
+package fengfei.slice;
 
-import fengfei.redis.slice.AbstractSlice;
+import fengfei.slice.impl.AbstractSlice;
 
 public interface Plotter {
 	public final static int ReadWrite = 0;

@@ -1,4 +1,4 @@
-package fengfei.redis.slice;
+package fengfei.slice;
 
 import java.util.List;
 import java.util.Map;
@@ -9,18 +9,16 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.pool.PoolableObjectFactory;
 
-import redis.clients.jedis.Jedis;
-import fengfei.redis.Equalizer;
-import fengfei.redis.SliceInfo;
+import fengfei.slice.impl.Slice;
 
-public class FailOver implements Runnable {
+public class FailOver<T> implements Runnable {
 	ScheduledExecutorService scheduledExecutorService = new ScheduledThreadPoolExecutor(
 			2);
 	Equalizer equalizer;
 
-	Pools pools;
+	Pools<T> pools;
 
-	public FailOver(Equalizer equalizer, Pools pools) {
+	public FailOver(Equalizer equalizer, Pools<T> pools) {
 		super();
 		this.equalizer = equalizer;
 		this.pools = pools;
@@ -41,7 +39,7 @@ public class FailOver implements Runnable {
 		Set<Long> keys = ms.keySet();
 		for (Long key : keys) {
 			Slice slice = ms.get(key);
-			List<SliceInfo> infos = slice.configSlaves;
+			List<SliceInfo> infos = slice.getConfigSlaves();
 			for (SliceInfo sliceInfo : infos) {
 				boolean isConnected = test(sliceInfo);
 				if (isConnected) {
@@ -58,20 +56,18 @@ public class FailOver implements Runnable {
 	}
 
 	private boolean test(SliceInfo sliceInfo) {
-		Jedis jedis = null;
-		PoolableObjectFactory<Jedis> poolableObjectFactory = null;
+		T t = null;
+		PoolableObjectFactory<T> poolableObjectFactory = pools
+				.create(sliceInfo);
 		try {
-			poolableObjectFactory = new PoolableRedisFactory(
-					sliceInfo.getHost(), sliceInfo.getPort(),
-					sliceInfo.getTimeout() * 1000, sliceInfo.getPassword());
-			jedis = poolableObjectFactory.makeObject();
-			return poolableObjectFactory.validateObject(jedis);
+			t = poolableObjectFactory.makeObject();
+			return poolableObjectFactory.validateObject(t);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		} finally {
 			try {
-				poolableObjectFactory.destroyObject(jedis);
+				poolableObjectFactory.destroyObject(t);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

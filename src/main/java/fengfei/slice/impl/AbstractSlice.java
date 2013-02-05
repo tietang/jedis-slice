@@ -1,9 +1,9 @@
-package fengfei.redis.slice;
+package fengfei.slice.impl;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import fengfei.redis.SliceInfo;
+import fengfei.slice.SliceInfo;
 
 public abstract class AbstractSlice {
 
@@ -50,4 +50,11 @@ public abstract class AbstractSlice {
 		return cancelledSlaves;
 	}
 
+	public SliceInfo getMaster() {
+		return master;
+	}
+
+	public List<SliceInfo> getSlaves() {
+		return slaves;
+	}
 }

@@ -1,9 +1,9 @@
-package fengfei.redis.slice;
+package fengfei.slice.impl;
 
 import java.util.List;
 
-import fengfei.redis.Plotter;
-import fengfei.redis.SliceInfo;
+import fengfei.slice.Plotter;
+import fengfei.slice.SliceInfo;
 
 public abstract class AbstractPlotter implements Plotter {
 

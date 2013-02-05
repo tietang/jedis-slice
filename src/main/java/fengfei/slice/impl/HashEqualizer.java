@@ -1,8 +1,8 @@
-package fengfei.redis.slice;
+package fengfei.slice.impl;
 
 import redis.clients.util.Hashing;
-import fengfei.redis.Plotter;
-import fengfei.redis.SliceInfo;
+import fengfei.slice.Plotter;
+import fengfei.slice.SliceInfo;
 
 /**
  * key -> hash % size->slice

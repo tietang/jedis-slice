@@ -1,13 +1,13 @@
 package fengfei.redis.example;
 
-import fengfei.redis.Equalizer;
-import fengfei.redis.Plotter;
-import fengfei.redis.RedisComand;
-import fengfei.redis.slice.HashEqualizer;
-import fengfei.redis.slice.LongModuleEqualizer;
-import fengfei.redis.slice.LoopPlotter;
-import fengfei.redis.slice.Slice;
-import fengfei.redis.slice.SlicedRedis;
+import fengfei.slice.Equalizer;
+import fengfei.slice.Plotter;
+import fengfei.slice.impl.HashEqualizer;
+import fengfei.slice.impl.LongModuleEqualizer;
+import fengfei.slice.impl.LoopPlotter;
+import fengfei.slice.impl.Slice;
+import fengfei.slice.redis.RedisComand;
+import fengfei.slice.redis.SlicedRedis;
 
 public class SlicedRedisExample {
 	private static boolean isPoolable = false;
@@ -63,7 +63,7 @@ public class SlicedRedisExample {
 		Slice slice1 = Slice.createSlice(timeout, "172.17.20.16:6379",
 				"172.17.20.16:6380", "172.17.20.16:6381");
 		equalizer.addSlice(1l, slice1);
-
+ 
 		SlicedRedis redis = new SlicedRedis(equalizer, isPoolable);
 		RedisComand rc = redis.createRedisCommand();
 		for (int i = 0; i < 10; i++) {

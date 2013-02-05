@@ -1,4 +1,4 @@
-package fengfei.redis;
+package fengfei.slice.redis;
 
 import redis.clients.jedis.BinaryJedisCommands;
 import redis.clients.jedis.JedisCommands;

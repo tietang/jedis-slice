@@ -1,8 +1,8 @@
-package fengfei.redis;
+package fengfei.slice;
 
 import java.util.Map;
 
-import fengfei.redis.slice.Slice;
+import fengfei.slice.impl.Slice;
 
 public interface Equalizer {
 

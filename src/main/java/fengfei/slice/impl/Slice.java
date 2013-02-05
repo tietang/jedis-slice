@@ -1,10 +1,10 @@
-package fengfei.redis.slice;
+package fengfei.slice.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import fengfei.redis.SliceInfo;
+import fengfei.slice.SliceInfo;
 
 public class Slice extends AbstractSlice {
 

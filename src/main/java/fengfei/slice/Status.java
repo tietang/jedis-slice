@@ -1,4 +1,4 @@
-package fengfei.redis;
+package fengfei.slice;
 
 import java.util.HashMap;
 import java.util.Map;

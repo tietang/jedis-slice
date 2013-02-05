@@ -1,8 +1,8 @@
-package fengfei.redis.slice;
+package fengfei.slice.impl;
 
 import java.util.Random;
 
-import fengfei.redis.Plotter;
+import fengfei.slice.Plotter;
 
 public class RandomPlootter extends AbstractPlotter implements Plotter {
 	protected Random random = new Random(19791216);

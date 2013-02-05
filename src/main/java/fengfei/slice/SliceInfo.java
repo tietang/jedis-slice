@@ -1,4 +1,4 @@
-package fengfei.redis;
+package fengfei.slice;
 
 public class SliceInfo {
 
