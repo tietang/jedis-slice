@@ -3,10 +3,11 @@
 **jedis** is a java client for Redis, as follow [jedis](https://github.com/xetorthio/jedis).
 
 #Usage#
-  example    src/test/java/fengfei/redis/example/SlicedRedisExample.java
+  **example:**    src/test/java/fengfei/redis/example/SlicedRedisExample.java
+
 **example 1:**
 
-	        SlicedRedis redis = new SlicedRedis(
+	    SlicedRedis redis = new SlicedRedis(
 				"192.168.1.10:6380 192.168.1.10:6380", 60000,
 				new HashEqualizer(), true);
 		RedisComand rc = redis.createRedisCommand();

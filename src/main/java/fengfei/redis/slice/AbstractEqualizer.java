@@ -22,7 +22,6 @@ public abstract class AbstractEqualizer implements Equalizer {
 
 	public AbstractEqualizer(Plotter plotter) {
 		super();
-
 		this.plotter = plotter;
 	}
 

@@ -5,14 +5,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,33 +54,35 @@ public class SlicedRedis {
 	final static int WriteOnly = 1;
 
 	private static Logger logger = LoggerFactory.getLogger(SlicedRedis.class);
-	protected Map<SliceInfo, ObjectPool<Jedis>> poolMap = new ConcurrentHashMap<>();
+	protected Pools pools;
 	private Equalizer equalizer = new HashEqualizer();
 	private AtomicLong lastId = new AtomicLong();
 	private boolean isPoolable = false;
-
-	private static GenericObjectPool.Config defaultConfig;
+	private GenericObjectPool.Config config = DefaultConfig;
+	private static GenericObjectPool.Config DefaultConfig;
 	static {
-		defaultConfig = new GenericObjectPool.Config();
-		defaultConfig.maxActive = 10;
-		defaultConfig.maxIdle = 10;
-		defaultConfig.minIdle = 2;
-		defaultConfig.maxWait = 60000;
-		defaultConfig.testOnBorrow = true;
-		defaultConfig.whenExhaustedAction = GenericObjectPool.WHEN_EXHAUSTED_FAIL;
+		DefaultConfig = new GenericObjectPool.Config();
+		DefaultConfig.maxActive = 10;
+		DefaultConfig.maxIdle = 10;
+		DefaultConfig.minIdle = 2;
+		DefaultConfig.maxWait = 60000;
+		DefaultConfig.testOnBorrow = true;
+		DefaultConfig.whenExhaustedAction = GenericObjectPool.WHEN_EXHAUSTED_FAIL;
 	}
 
 	public SlicedRedis(Equalizer equalizer, boolean isPoolable) {
 		this.equalizer = equalizer;
 		this.isPoolable = isPoolable;
-		createPool(equalizer, defaultConfig);
+		createPool(equalizer, config);
+		startFailOver();
 	}
 
 	public SlicedRedis(Equalizer equalizer, GenericObjectPool.Config config) {
 		this.equalizer = equalizer;
 		this.isPoolable = true;
+		this.config = config;
 		createPool(equalizer, config);
-
+		startFailOver();
 	}
 
 	public SlicedRedis(String hosts, int timeout, Equalizer equalizer,
@@ -99,6 +96,7 @@ public class SlicedRedis {
 			GenericObjectPool.Config config) {
 		super();
 		this.isPoolable = true;
+		this.config = config;
 		init(hosts, timeout, equalizer.getPlotter(), config);
 	}
 
@@ -113,6 +111,7 @@ public class SlicedRedis {
 			GenericObjectPool.Config config) {
 		super();
 		this.isPoolable = true;
+		this.config = config;
 		init(hosts, timeout, plotter, config);
 	}
 
@@ -139,51 +138,27 @@ public class SlicedRedis {
 			createPool(slice, config);
 			lastId.incrementAndGet();
 		}
+		startFailOver();
+	}
 
+	FailOver failOver;
+
+	private void startFailOver() {
+		failOver = new FailOver(equalizer, pools);
+		failOver.start();
 	}
 
 	private void createPool(Slice slice, GenericObjectPool.Config config) {
-		List<SliceInfo> master = new ArrayList<>();
-		master.add(slice.master);
-		createPool(config, master);
-		createPool(config, slice.slaves);
+		if (isPoolable) {
+			pools = new Pools(config);
+			pools.createPool(slice);
+		}
 	}
 
 	private void createPool(Equalizer equalizer, GenericObjectPool.Config config) {
 		if (isPoolable) {
-			Set<Entry<Long, Slice>> sets = equalizer.getSliceMap().entrySet();
-			for (Entry<Long, Slice> entry : sets) {
-				Slice slice = entry.getValue();
-				List<SliceInfo> master = new ArrayList<>();
-				master.add(slice.master);
-				createPool(config, master);
-				createPool(config, slice.slaves);
-			}
-		}
-	}
-
-	private void createPool(GenericObjectPool.Config config,
-			List<SliceInfo> sliceInfos) {
-		if (isPoolable) {
-
-			if (config == null) {
-				config = defaultConfig;
-			}
-			for (SliceInfo info : sliceInfos) {
-				ObjectPool<Jedis> pool = poolMap.get(info);
-				if (pool == null) {
-					pool = new GenericObjectPool<>(new PoolableRedisFactory(
-							info.getHost(), info.getPort(),
-							info.getTimeout() * 1000), config);
-					poolMap.put(info, pool);
-					logger.debug("created pool for: " + info);
-				} else {
-					logger.debug("pool isn't created, already exists pool for: "
-							+ info);
-				}
-
-			}
-
+			pools = new Pools(config);
+			pools.createPool(equalizer);
 		}
 	}
 
@@ -224,23 +199,9 @@ public class SlicedRedis {
 	}
 
 	public void close() {
-		Set<Entry<SliceInfo, ObjectPool<Jedis>>> sets = poolMap.entrySet();
-		for (Entry<SliceInfo, ObjectPool<Jedis>> entry : sets) {
-			SliceInfo info = entry.getKey();
-			ObjectPool<Jedis> pool = entry.getValue();
-			try {
-				pool.clear();
-			} catch (Throwable e) {
-
-				logger.error("clear pool error for:" + info.toString(), e);
-			}
-			try {
-				pool.close();
-			} catch (Throwable e) {
-				logger.error("close pool error for: " + info.toString(), e);
-			}
-
-		}
+		if (isPoolable)
+			pools.closeAll();
+		failOver.exit();
 
 	}
 
@@ -257,7 +218,6 @@ public class SlicedRedis {
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
-			ObjectPool<Jedis> pool = null;
 
 			Jedis jedis = null;
 			SliceInfo sliceInfo = null;
@@ -284,8 +244,7 @@ public class SlicedRedis {
 				}
 				sliceInfo = equalizer.get(new String(key), readWrite);
 
-				pool = poolMap.get(sliceInfo);
-				jedis = pool.borrowObject();
+				jedis = pools.borrowJedis(sliceInfo);
 				if (jedis == null) {
 					throw new Exception("can't connected redis");
 				}
@@ -301,7 +260,7 @@ public class SlicedRedis {
 				throw e;
 
 			} finally {
-				pool.returnObject(jedis);
+				pools.returnJedis(sliceInfo, jedis);
 			}
 		}
 	}

@@ -1,7 +1,7 @@
-2013-02-04 17:12:00.612[DEBUG]: created pool for: SliceInfo [host=172.17.20.16, port=6379, timeout=60, password=null, isMaster=true, status=Normal]
-2013-02-04 17:12:00.617[DEBUG]: created pool for: SliceInfo [host=172.17.20.16, port=6380, timeout=60, password=null, isMaster=true, status=Normal]
-2013-02-04 17:12:00.617[DEBUG]: created pool for: SliceInfo [host=172.17.20.16, port=6381, timeout=60, password=null, isMaster=true, status=Normal]
-2013-02-04 17:12:00.618[DEBUG]: pool isn't created, already exists pool for: SliceInfo [host=172.17.20.16, port=6379, timeout=60, password=null, isMaster=true, status=Normal]
-2013-02-04 17:12:00.619[DEBUG]: pool isn't created, already exists pool for: SliceInfo [host=172.17.20.16, port=6380, timeout=60, password=null, isMaster=true, status=Normal]
-2013-02-04 17:12:00.619[DEBUG]: pool isn't created, already exists pool for: SliceInfo [host=172.17.20.16, port=6381, timeout=60, password=null, isMaster=true, status=Normal]
-2013-02-04 17:12:00.623[DEBUG]: create RedisComand with pool.
+2013-02-05 11:14:27.445[DEBUG]: created pool for: SliceInfo [host=172.17.20.16, port=6379, timeout=60, password=null, isMaster=true, status=Normal]
+2013-02-05 11:14:27.450[DEBUG]: created pool for: SliceInfo [host=172.17.20.16, port=6380, timeout=60, password=null, isMaster=true, status=Normal]
+2013-02-05 11:14:27.452[DEBUG]: created pool for: SliceInfo [host=172.17.20.16, port=6381, timeout=60, password=null, isMaster=true, status=Normal]
+2013-02-05 11:14:27.452[DEBUG]: pool isn't created, already exists pool for: SliceInfo [host=172.17.20.16, port=6379, timeout=60, password=null, isMaster=true, status=Normal]
+2013-02-05 11:14:27.453[DEBUG]: pool isn't created, already exists pool for: SliceInfo [host=172.17.20.16, port=6380, timeout=60, password=null, isMaster=true, status=Normal]
+2013-02-05 11:14:27.453[DEBUG]: pool isn't created, already exists pool for: SliceInfo [host=172.17.20.16, port=6381, timeout=60, password=null, isMaster=true, status=Normal]
+2013-02-05 11:14:27.460[DEBUG]: create RedisComand with pool.
