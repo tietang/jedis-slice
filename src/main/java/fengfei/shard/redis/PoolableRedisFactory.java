@@ -1,4 +1,4 @@
-package fengfei.slice.redis;
+package fengfei.shard.redis;
 
 import java.rmi.ConnectException;
 

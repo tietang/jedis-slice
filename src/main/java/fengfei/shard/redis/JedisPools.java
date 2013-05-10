@@ -1,11 +1,11 @@
-package fengfei.slice.redis;
+package fengfei.shard.redis;
 
 import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool.Config;
 
 import redis.clients.jedis.Jedis;
-import fengfei.slice.SliceInfo;
-import fengfei.slice.impl.AbstractPools;
+import fengfei.shard.InstanceInfo;
+import fengfei.shard.impl.AbstractPools;
 
 public class JedisPools extends AbstractPools<Jedis> {
 
@@ -14,9 +14,14 @@ public class JedisPools extends AbstractPools<Jedis> {
 	}
 
 	@Override
-	public PoolableObjectFactory<Jedis> create(SliceInfo info) {
+	public PoolableObjectFactory<Jedis> create(InstanceInfo info) {
 		return new PoolableRedisFactory(info.getHost(), info.getPort(),
 				info.getTimeout(), info.getPassword());
 	}
+
+    @Override
+    public String toString() {
+        return "JedisPools [poolMap=" + poolMap + ", config=" + config + "]";
+    }
 
 }
