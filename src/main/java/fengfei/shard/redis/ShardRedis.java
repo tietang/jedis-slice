@@ -254,6 +254,7 @@ public class ShardRedis {
                 if (!jedis.isConnected()) {
                     throw new Exception("redis can't be connected for key:" + key);
                 }
+              
                 Method origin = Jedis.class.getMethod(method.getName(), argsClass);
                 Object obj = origin.invoke(jedis, args);
                 return obj;
