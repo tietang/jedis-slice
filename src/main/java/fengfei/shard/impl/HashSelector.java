@@ -12,13 +12,12 @@ import fengfei.shard.Range;
 import fengfei.shard.Selector;
 import fengfei.shard.Shard;
 import fengfei.shard.exception.ShardException;
-import fengfei.shard.exception.ShardRuntimeExcption;
 
 public class HashSelector implements Selector {
 
 	protected List<Shard> shards = new ArrayList<>();
 	protected Lock lock = new ReentrantLock();
-	protected Ploy ploy = new HashPloy();
+	protected Ploy ploy = new LoopPloy();
 	protected Hashing hashed = Hashing.MD5;
 
 	public HashSelector() {

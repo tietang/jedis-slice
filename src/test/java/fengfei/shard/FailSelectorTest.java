@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import fengfei.shard.impl.HashSelector;
+import fengfei.shard.impl.RandomPloy;
 
 public class FailSelectorTest {
 
@@ -20,6 +21,7 @@ public class FailSelectorTest {
 	@Before
 	public void setUpBeforeClass() throws Exception {
 		selector = new HashSelector();
+//		selector.setPloy(new RandomPloy());
 		int timeout = 30;
 
 		selector.addShard(Shard.createShard(timeout, "192.168.1.11:8002",

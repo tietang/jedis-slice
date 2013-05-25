@@ -1,5 +1,7 @@
 package fengfei.shard.impl;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import fengfei.shard.InstanceInfo;
@@ -41,25 +43,49 @@ public abstract class AbstractPloy implements Ploy {
 		return info;
 	}
 
-	public InstanceInfo getMaster(Shard shard, String key) {
+	public InstanceInfo getMaster(Shard shard, String key)
+			throws ShardException {
 		return shard.getMaster();
 	}
 
-	public InstanceInfo getAny(Shard shard, String key) {
+	public InstanceInfo getAny(Shard shard, String key) throws ShardException {
 		List<InstanceInfo> slaves = shard.getSlaves();
 		InstanceInfo master = shard.getMaster();
-		int index = calculate(key, slaves.size() + 1);
-		return (slaves == null || index == slaves.size()) ? master : slaves
-				.get(index);
+
+		List<InstanceInfo> all = new ArrayList<>(slaves);
+		all.add(master);
+		InstanceInfo info = get(all, new HashSet<InstanceInfo>(), shard, key);
+		return info;
 	}
 
-	public InstanceInfo getNextSlave(Shard shard, String key) {
-		List<InstanceInfo> slaves = shard.getSlaves();
-		InstanceInfo master = shard.getMaster();
-		if (slaves == null || slaves.size() == 0) {
-			return master;
+	protected InstanceInfo get(List<InstanceInfo> all,
+			HashSet<InstanceInfo> failSlaves, Shard shard, String key)
+			throws ShardException {
+
+		HashSet<InstanceInfo> allSlaves = new HashSet<>(all);
+
+		if (failSlaves.size() == allSlaves.size()
+				&& failSlaves.equals(allSlaves)) {
+			throw new ShardException(
+					"Current shard has not available instance for key: " + key);
 		}
-		return slaves.get(calculate(key, slaves.size()));
+
+		InstanceInfo master = shard.getMaster();
+		int index = calculate(key, allSlaves.size());
+		InstanceInfo info = (all == null) ? master : all.get(index);
+		if (info.getStatus() != Status.Normal) {
+			failSlaves.add(info);
+			info = get(all, failSlaves, shard, key);
+		}
+		return info;
+	}
+
+	public InstanceInfo getNextSlave(Shard shard, String key)
+			throws ShardException {
+		List<InstanceInfo> slaves = shard.getSlaves();
+		List<InstanceInfo> all = new ArrayList<>(slaves);
+		InstanceInfo info = get(all, new HashSet<InstanceInfo>(), shard, key);
+		return info;
 	}
 
 	public abstract int calculate(String key, int size);

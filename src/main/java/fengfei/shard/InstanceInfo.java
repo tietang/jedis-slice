@@ -9,6 +9,7 @@ public class InstanceInfo {
 	protected String schema;
 	protected boolean isMaster = true;
 	protected Status status = Status.Normal;
+	protected int weight = 1;
 
 	public InstanceInfo(String host, int port, int timeout) {
 		super();
