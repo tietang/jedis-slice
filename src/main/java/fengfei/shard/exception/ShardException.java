@@ -1,6 +1,6 @@
-package fengfei.shard;
+package fengfei.shard.exception;
 
-public class ShardException extends RuntimeException {
+public class ShardException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 

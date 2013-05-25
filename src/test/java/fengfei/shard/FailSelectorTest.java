@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import fengfei.shard.impl.HashSelector;
 
-public class SelectorTest {
+public class FailSelectorTest {
 
 	Selector selector = null;
 
@@ -26,7 +26,15 @@ public class SelectorTest {
 				"192.168.1.12:8002", "192.168.1.13:8002"));
 		selector.addShard(Shard.createShard(timeout, "192.168.1.21:8002",
 				"192.168.1.22:8002", "192.168.1.23:8002"));
+		List<Shard> shards = selector.getShards();
+		for (Shard shard : shards) {
+			List<InstanceInfo> infos = shard.getConfigedInfos();
+			for (InstanceInfo info : infos) {
+				info.setStatus(Status.Error);
 
+			}
+		}
+		System.out.println(shards);
 	}
 
 	@AfterClass
@@ -41,18 +49,20 @@ public class SelectorTest {
 				System.out.println(info);
 				assertNotNull(info);
 				assertTrue(info.isMaster());
+				assertEquals(Status.Error, info.getStatus());
 			} catch (Exception e) {
 				e.printStackTrace();
-				assertTrue(false);
+				assertTrue(true);
 			}
 			try {
 				InstanceInfo info = selector.select("key1" + i, Read);
 				System.out.println(info);
 				assertNotNull(info);
 				assertTrue(!info.isMaster());
+				assertEquals(Status.Error, info.getStatus());
 			} catch (Exception e) {
 				e.printStackTrace();
-				assertTrue(false);
+				assertTrue(true);
 			}
 		}
 
@@ -60,21 +70,22 @@ public class SelectorTest {
 
 	@Test
 	public void testSelectMaster() {
+
 		for (int i = 0; i < 10; i++) {
 			try {
 				InstanceInfo info = selector.selectMaster("master" + i);
 				System.out.println(info);
 				assertNotNull(info);
 				assertTrue(info.isMaster());
+				assertEquals(Status.Error, info.getStatus());
 			} catch (Exception e) {
 				e.printStackTrace();
-				assertTrue(false);
+				assertTrue(true);
 			}
 
 		}
+
 	}
-
-
 
 	@Test
 	public void testSelectSlave() {
@@ -84,9 +95,10 @@ public class SelectorTest {
 				System.out.println(info);
 				assertNotNull(info);
 				assertTrue(!info.isMaster());
+				assertEquals(Status.Error, info.getStatus());
 			} catch (Exception e) {
 				e.printStackTrace();
-				assertTrue(false);
+				assertTrue(true);
 			}
 
 		}
@@ -100,9 +112,10 @@ public class SelectorTest {
 				;
 				System.out.println(info);
 				assertNotNull(info);
+				assertEquals(Status.Error, info.getStatus());
 			} catch (Exception e) {
 				e.printStackTrace();
-				assertTrue(false);
+				assertTrue(true);
 			}
 
 		}

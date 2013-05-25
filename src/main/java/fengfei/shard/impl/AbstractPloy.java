@@ -6,47 +6,61 @@ import fengfei.shard.InstanceInfo;
 import fengfei.shard.Ploy;
 import fengfei.shard.Selector;
 import fengfei.shard.Shard;
+import fengfei.shard.Status;
+import fengfei.shard.exception.ShardException;
 
 public abstract class AbstractPloy implements Ploy {
-    @Override
-    public InstanceInfo select(String key, Shard shard, int readWrite) {
-        InstanceInfo info = null;
-        switch (readWrite) {
-        case Selector.ReadWrite:
-            info = getAny(shard, key);
-            break;
-        case Selector.Read:
-            info = getNextSlave(shard, key);
-            break;
-        case Selector.Write:
-            info = getMaster(shard, key);
-            break;
+	@Override
+	public InstanceInfo select(String key, Shard shard, int readWrite)
+			throws ShardException {
+		InstanceInfo info = null;
+		switch (readWrite) {
+		case Selector.ReadWrite:
+			info = getAny(shard, key);
+			break;
+		case Selector.Read:
+			info = getNextSlave(shard, key);
+			break;
+		case Selector.Write:
+			info = getMaster(shard, key);
+			break;
 
-        default:
-            break;
-        }
-        return info;
-    }
+		default:
+			break;
+		}
+		if (info == null) {
+			throw new ShardException("Can't find instance for key: " + key);
+		}
 
-    public InstanceInfo getMaster(Shard shard, String key) {
-        return shard.getMaster();
-    }
+		if (info.getStatus() != Status.Normal) {
+			throw new ShardException(
+					"Current instance is unavailable, cause is "
+							+ info.getStatus().name() + ", "
+							+ info.toInfoString());
+		}
+		return info;
+	}
 
-    public InstanceInfo getAny(Shard shard, String key) {
-        List<InstanceInfo> slaves = shard.getSlaves();
-        InstanceInfo master = shard.getMaster();
-        int index = calculate(key, slaves.size() + 1);
-        return (slaves == null || index == slaves.size()) ? master : slaves.get(index);
-    }
+	public InstanceInfo getMaster(Shard shard, String key) {
+		return shard.getMaster();
+	}
 
-    public InstanceInfo getNextSlave(Shard shard, String key) {
-        List<InstanceInfo> slaves = shard.getSlaves();
-        InstanceInfo master = shard.getMaster();
-        if (slaves == null || slaves.size() == 0) {
-            return master;
-        }
-        return slaves.get(calculate(key, slaves.size()));
-    }
+	public InstanceInfo getAny(Shard shard, String key) {
+		List<InstanceInfo> slaves = shard.getSlaves();
+		InstanceInfo master = shard.getMaster();
+		int index = calculate(key, slaves.size() + 1);
+		return (slaves == null || index == slaves.size()) ? master : slaves
+				.get(index);
+	}
 
-    public abstract int calculate(String key, int size);
+	public InstanceInfo getNextSlave(Shard shard, String key) {
+		List<InstanceInfo> slaves = shard.getSlaves();
+		InstanceInfo master = shard.getMaster();
+		if (slaves == null || slaves.size() == 0) {
+			return master;
+		}
+		return slaves.get(calculate(key, slaves.size()));
+	}
+
+	public abstract int calculate(String key, int size);
 }
