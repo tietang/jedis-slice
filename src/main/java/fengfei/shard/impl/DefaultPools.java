@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.pool.ObjectPool;
-import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool.Config;
 import org.slf4j.Logger;
@@ -20,11 +19,11 @@ import fengfei.shard.Pools;
 import fengfei.shard.Selector;
 import fengfei.shard.Shard;
 
-public abstract class AbstractPools<T> implements Pools<T> {
+public class DefaultPools<T> implements Pools<T> {
 
-	private static Logger logger = LoggerFactory.getLogger(AbstractPools.class);
+	private static Logger logger = LoggerFactory.getLogger(DefaultPools.class);
 	protected Map<InstanceInfo, ObjectPool<T>> poolMap = new ConcurrentHashMap<>();
-
+	protected PoolableObjectFactoryCreator<T> factoryCreator;
 	protected GenericObjectPool.Config config;
 	public static GenericObjectPool.Config DefaultConfig;
 	static {
@@ -37,10 +36,18 @@ public abstract class AbstractPools<T> implements Pools<T> {
 		DefaultConfig.whenExhaustedAction = GenericObjectPool.WHEN_EXHAUSTED_FAIL;
 	}
 
-	public AbstractPools(Config config) {
+	public DefaultPools(Config config,
+			PoolableObjectFactoryCreator<T> factoryCreator) {
 		super();
 
 		this.config = config;
+		this.factoryCreator = factoryCreator;
+	}
+
+	public DefaultPools(PoolableObjectFactoryCreator<T> factoryCreator) {
+		super();
+		this.config = DefaultConfig;
+		this.factoryCreator = factoryCreator;
 	}
 
 	public void closeAll() {
@@ -51,6 +58,10 @@ public abstract class AbstractPools<T> implements Pools<T> {
 			close(pool, info);
 		}
 
+	}
+
+	public PoolableObjectFactoryCreator<T> getPoolableObjectFactoryCreator() {
+		return factoryCreator;
 	}
 
 	public void close(ObjectPool<T> pool, InstanceInfo info) {
@@ -95,13 +106,11 @@ public abstract class AbstractPools<T> implements Pools<T> {
 
 	}
 
-	public abstract PoolableObjectFactory<T> create(InstanceInfo info);
-
 	public void createPool(InstanceInfo info) {
 
 		ObjectPool<T> pool = poolMap.get(info);
 		if (pool == null) {
-			pool = new GenericObjectPool<>(create(info), config);
+			pool = new GenericObjectPool<>(factoryCreator.create(info), config);
 			poolMap.put(info, pool);
 			logger.debug("created pool for host: " + info);
 		} else {

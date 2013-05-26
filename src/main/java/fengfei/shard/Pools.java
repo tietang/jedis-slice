@@ -4,27 +4,29 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.pool.ObjectPool;
-import org.apache.commons.pool.PoolableObjectFactory;
+
+import fengfei.shard.impl.PoolableObjectFactoryCreator;
 
 public interface Pools<T> {
 
-    void closeAll();
+	void closeAll();
 
-    void close(ObjectPool<T> pool, InstanceInfo info);
+	void close(ObjectPool<T> pool, InstanceInfo info);
 
-    void createPool(Selector selector);
+	void createPool(Selector selector);
 
-    void createPool(Shard shard);
+	void createPool(Shard shard);
 
-    void createPool(List<InstanceInfo> infos);
+	void createPool(List<InstanceInfo> infos);
 
-    void createPool(InstanceInfo info);
+	void createPool(InstanceInfo info);
 
-    void remove(InstanceInfo info);
+	void remove(InstanceInfo info);
 
-    T borrow(InstanceInfo info) throws NoSuchElementException, IllegalStateException, Exception;
+	T borrow(InstanceInfo info) throws NoSuchElementException,
+			IllegalStateException, Exception;
 
-    void returnPool(InstanceInfo info, T T) throws Exception;
+	void returnPool(InstanceInfo info, T T) throws Exception;
 
-    PoolableObjectFactory<T> create(InstanceInfo info);
+	public PoolableObjectFactoryCreator<T> getPoolableObjectFactoryCreator();
 }

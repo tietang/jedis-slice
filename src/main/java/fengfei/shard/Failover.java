@@ -42,7 +42,6 @@ public class Failover<T> implements Runnable {
 		for (Shard shard : shards) {
 			List<InstanceInfo> infos = shard.getConfigedInfos();
 			for (InstanceInfo info : infos) {
-			 
 
 				boolean isConnected = test(info);
 				if (isConnected) {
@@ -51,7 +50,7 @@ public class Failover<T> implements Runnable {
 				} else {
 					shard.cancel(info);
 					pools.remove(info);
-				 
+
 				}
 			}
 		}
@@ -60,7 +59,8 @@ public class Failover<T> implements Runnable {
 
 	private boolean test(InstanceInfo info) {
 		T t = null;
-		PoolableObjectFactory<T> poolableObjectFactory = pools.create(info);
+		PoolableObjectFactory<T> poolableObjectFactory = pools
+				.getPoolableObjectFactoryCreator().create(info);
 		try {
 			t = poolableObjectFactory.makeObject();
 			return poolableObjectFactory.validateObject(t);
