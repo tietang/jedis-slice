@@ -1,4 +1,4 @@
-package fengfei.shard.redis;
+package fengfei.shard.impl;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -7,22 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 import fengfei.shard.Failover;
 import fengfei.shard.InstanceInfo;
 import fengfei.shard.Ploy;
 import fengfei.shard.Pools;
 import fengfei.shard.Selector;
 import fengfei.shard.Shard;
-import fengfei.shard.impl.DefaultPools;
-import fengfei.shard.impl.HashSelector;
 
 /**
  * <pre>
@@ -53,29 +49,35 @@ import fengfei.shard.impl.HashSelector;
  * @author
  * 
  */
-public class ShardRedis {
+public class DefaultShard<T> {
 
 	final static int ReadWrite = 0;
 	final static int ReadOnly = 2;
 	final static int WriteOnly = 1;
 
-	private static Logger logger = LoggerFactory.getLogger(ShardRedis.class);
-	protected Pools<Jedis> pools;
-	private Selector selector = new HashSelector();
-	private AtomicInteger lastId = new AtomicInteger(0);
-	private boolean isPoolable = false;
-	private GenericObjectPool.Config config = DefaultPools.DefaultConfig;
+	private static Logger logger = LoggerFactory.getLogger(DefaultShard.class);
+	protected Pools<T> pools;
+	protected Selector selector = new HashSelector();
+	protected AtomicInteger lastId = new AtomicInteger(0);
+	protected boolean isPoolable = false;
+	protected GenericObjectPool.Config config = DefaultPools.DefaultConfig;
+	protected PoolableObjectFactoryCreator<T> factoryCreator;
 
-	public ShardRedis(Selector selector, boolean isPoolable) {
+	public DefaultShard(Selector selector,
+			PoolableObjectFactoryCreator<T> factoryCreator, boolean isPoolable) {
 		this.selector = selector;
 		this.isPoolable = isPoolable;
+		this.factoryCreator = factoryCreator;
 		createPool(selector, config);
 		startFailOver();
 	}
 
-	public ShardRedis(Selector selector, GenericObjectPool.Config config) {
+	public DefaultShard(Selector selector,
+			PoolableObjectFactoryCreator<T> factoryCreator,
+			GenericObjectPool.Config config) {
 		this.selector = selector;
 		this.isPoolable = true;
+		this.factoryCreator = factoryCreator;
 		this.config = config;
 		createPool(selector, config);
 		startFailOver();
@@ -92,40 +94,46 @@ public class ShardRedis {
 	 * @param selector
 	 * @param isPoolable
 	 */
-	public ShardRedis(String hosts, int timeout, Selector selector,
-			boolean isPoolable) {
+	public DefaultShard(String hosts, int timeout, Selector selector,
+			PoolableObjectFactoryCreator<T> factoryCreator, boolean isPoolable) {
 		super();
 		this.isPoolable = isPoolable;
+		this.factoryCreator = factoryCreator;
 		init(hosts, timeout, selector.getPloy(), null);
 	}
 
-	public ShardRedis(String hosts, int timeout, Selector selector,
+	public DefaultShard(String hosts, int timeout, Selector selector,
+			PoolableObjectFactoryCreator<T> factoryCreator,
 			GenericObjectPool.Config config) {
 		super();
 		this.isPoolable = true;
 		this.config = config;
+		this.factoryCreator = factoryCreator;
 		init(hosts, timeout, selector.getPloy(), config);
 	}
 
-	public ShardRedis(String hosts, int timeout, Ploy ploy, boolean isPoolable) {
+	public DefaultShard(String hosts, int timeout, Ploy ploy,
+			PoolableObjectFactoryCreator<T> factoryCreator, boolean isPoolable) {
 		super();
 		this.isPoolable = isPoolable;
+		this.factoryCreator = factoryCreator;
 		init(hosts, timeout, ploy, null);
 	}
 
-	public ShardRedis(String hosts, int timeout, Ploy ploy,
+	public DefaultShard(String hosts, int timeout, Ploy ploy,
+			PoolableObjectFactoryCreator<T> factoryCreator,
 			GenericObjectPool.Config config) {
 		super();
 		this.isPoolable = true;
 		this.config = config;
+		this.factoryCreator = factoryCreator;
 		init(hosts, timeout, ploy, config);
 	}
 
-	private void init(String hosts, int timeout, Ploy ploy,
+	protected void init(String hosts, int timeout, Ploy ploy,
 			GenericObjectPool.Config config) {
 		String[] allhosts = hosts.split(" ");
-		pools = new DefaultPools<Jedis>(config,
-				new PoolableRedisFactoryCreator());
+		pools = new DefaultPools<T>(config, getPoolableObjectFactoryCreator());
 		for (int j = 0; j < allhosts.length; j++) {
 			String mshosts = allhosts[j];
 			String shardHosts[] = mshosts.split(",");
@@ -151,7 +159,11 @@ public class ShardRedis {
 		startFailOver();
 	}
 
-	Failover<Jedis> failOver;
+	public PoolableObjectFactoryCreator<T> getPoolableObjectFactoryCreator() {
+		return factoryCreator;
+	}
+
+	Failover<T> failOver;
 
 	private void startFailOver() {
 		failOver = new Failover<>(selector, pools);
@@ -188,21 +200,21 @@ public class ShardRedis {
 		lastId.incrementAndGet();
 	}
 
-	public RedisComand createRedisCommand() {
-		return createRedisCommand(ReadWrite);
+	public <I> I create(Class<I> iface) {
+		return create(iface, ReadWrite);
 	}
 
-	public RedisComand createRedisCommand(int rw) {
-		Class<RedisComand> iface = RedisComand.class;
+	public <I> I create(Class<I> iface, int rw) {
+
 		InvocationHandler handler = null;
 		if (isPoolable) {
-			handler = new PoolableRedisComandsHandler(rw);
+			handler = new PoolableHandler<I>(iface, rw);
 			logger.debug("create RedisComand with pool.");
 		} else {
-			handler = new RedisComandsHandler(rw);
+			handler = new Handler<I>(iface, rw);
 			logger.debug("create RedisComand without pool.");
 		}
-		return (RedisComand) Proxy.newProxyInstance(iface.getClassLoader(),
+		return (I) Proxy.newProxyInstance(iface.getClassLoader(),
 				new Class[] { iface }, handler);
 	}
 
@@ -214,20 +226,21 @@ public class ShardRedis {
 
 	Random random = new Random(19800202);
 
-	private class PoolableRedisComandsHandler implements InvocationHandler {
-
+	private class PoolableHandler<I> implements InvocationHandler {
+		Class<I> iface;
 		int readWrite = ReadWrite;
 
-		public PoolableRedisComandsHandler(int readWrite) {
+		public PoolableHandler(Class<I> iface, int readWrite) {
 			super();
 			this.readWrite = readWrite;
+			this.iface = iface;
 		}
 
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
 
-			Jedis jedis = null;
+			T call = null;
 			InstanceInfo info = null;
 			String key = null;
 			try {
@@ -252,44 +265,41 @@ public class ShardRedis {
 				}
 				info = selector.select(new String(key), readWrite);
 
-				jedis = pools.borrow(info);
-				if (jedis == null) {
+				call = pools.borrow(info);
+				if (call == null) {
 					throw new Exception("can't connected redis for key:" + key);
 				}
-				if (!jedis.isConnected()) {
-					throw new Exception("redis can't be connected for key:"
-							+ key);
-				}
 
-				Method origin = Jedis.class.getMethod(method.getName(),
-						argsClass);
-				Object obj = origin.invoke(jedis, args);
+				Method origin = iface.getMethod(method.getName(), argsClass);
+				Object obj = origin.invoke(call, args);
 				return obj;
 			} catch (Throwable e) {
 				logger.error("Can not operate redis for key:" + key, e);
 				throw e;
 
 			} finally {
-				pools.returnPool(info, jedis);
+				pools.returnPool(info, call);
 			}
 		}
 	}
 
-	private class RedisComandsHandler implements InvocationHandler {
-
+	private class Handler<I> implements InvocationHandler {
+		Class<I> iface;
 		int readWrite = ReadWrite;
 
-		public RedisComandsHandler(int readWrite) {
+		public Handler(Class<I> iface, int readWrite) {
 			super();
 			this.readWrite = readWrite;
+			this.iface = iface;
 		}
 
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
 
-			Jedis jedis = null;
-			InstanceInfo ShardInfo = null;
+			T call = null;
+			InstanceInfo info = null;
+			PoolableObjectFactory<T> pof = null;
 			try {
 				byte[] key = null;
 
@@ -311,18 +321,19 @@ public class ShardRedis {
 					// argsClass = new Class<?>[] {};
 					key = String.valueOf(random.nextLong()).getBytes();
 				}
-				ShardInfo = selector.select(new String(key), readWrite);
+				info = selector.select(new String(key), readWrite);
+				pof = getPoolableObjectFactoryCreator().create(info);
 
-				jedis = jedisConnect(ShardInfo);
-				if (jedis == null) {
+				call = pof.makeObject();
+
+				if (call == null) {
 					throw new Exception("can't connected redis");
 				}
-				if (!jedis.isConnected()) {
+				if (!pof.validateObject(call)) {
 					throw new Exception("redis can't be connected.");
 				}
-				Method origin = Jedis.class.getMethod(method.getName(),
-						argsClass);
-				Object obj = origin.invoke(jedis, args);
+				Method origin = iface.getMethod(method.getName(), argsClass);
+				Object obj = origin.invoke(call, args);
 				return obj;
 			} catch (Throwable e) {
 				logger.error("Can not operate redis ", e);
@@ -330,34 +341,14 @@ public class ShardRedis {
 
 			} finally {
 				try {
-					try {
-						jedis.quit();
-					} catch (Exception e) {
-					}
-					jedis.disconnect();
+
+					pof.destroyObject(call);
+
 				} catch (Exception e) {
 					logger.error("close jedis error ", e);
 				}
 			}
 		}
-	}
-
-	private static Jedis jedisConnect(InstanceInfo ShardInfo)
-			throws JedisConnectionException {
-		try {
-			Jedis jedis = new Jedis(ShardInfo.getHost(), ShardInfo.getPort(),
-					ShardInfo.getTimeout());
-
-			jedis.connect();
-			if (null != ShardInfo.getPassword()) {
-				jedis.auth(ShardInfo.getPassword());
-			}
-			return jedis;
-		} catch (Exception e) {
-			throw new JedisConnectionException("Can't connect host:"
-					+ ShardInfo.getHost() + ":" + ShardInfo.getPort(), e);
-		}
-
 	}
 
 	public static interface RetryCallback {
