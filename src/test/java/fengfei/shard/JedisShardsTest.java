@@ -11,33 +11,21 @@ import org.junit.Test;
 
 import redis.clients.jedis.Jedis;
 import fengfei.shard.ServerHelper.Clientx;
-import fengfei.shard.ServerHelper.Serverx;
 import fengfei.shard.impl.HashSelector;
 import fengfei.shard.impl.PoolableObjectFactoryCreator;
 import fengfei.shard.impl.Shards;
-import fengfei.shard.redis.JedisShards;
 import fengfei.shard.redis.PoolableRedisFactoryCreator;
 import fengfei.shard.redis.RedisComand;
 
 public class JedisShardsTest {
 
 	static Shards<Jedis> shards;
-	static Serverx serverx = new Serverx();
+ 
 	static int size = 60;
 
 	@BeforeClass
 	public static void setup() {
-		Thread t = new Thread() {
-
-			public void run() {
-				try {
-					serverx.start();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			};
-		};
-		t.start();
+	 
 		shards = new Shards<>("127.0.0.1:6379 127.0.0.1:6379", 60000,
 				new HashSelector(), new PoolableRedisFactoryCreator(), true);
 //		shards = new JedisShards("127.0.0.1:6379 127.0.0.1:6379", 60000,
@@ -47,7 +35,7 @@ public class JedisShardsTest {
 
 	@AfterClass
 	public static void unsetup() {
-		serverx.close();
+	 
 		shards.close();
 	}
 
