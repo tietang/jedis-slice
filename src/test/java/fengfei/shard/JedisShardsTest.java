@@ -7,19 +7,21 @@ import org.apache.commons.pool.PoolableObjectFactory;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import redis.clients.jedis.Jedis;
 import fengfei.shard.ServerHelper.Clientx;
-import fengfei.shard.ServerHelper.RPCInterface;
 import fengfei.shard.ServerHelper.Serverx;
-import fengfei.shard.impl.DefaultShard;
 import fengfei.shard.impl.HashSelector;
 import fengfei.shard.impl.PoolableObjectFactoryCreator;
+import fengfei.shard.impl.Shards;
+import fengfei.shard.redis.JedisShards;
+import fengfei.shard.redis.PoolableRedisFactoryCreator;
+import fengfei.shard.redis.RedisComand;
 
-public class ShardTest {
+public class JedisShardsTest {
 
-	static DefaultShard<Clientx> shard;
+	static Shards<Jedis> shards;
 	static Serverx serverx = new Serverx();
 	static int size = 60;
 
@@ -36,25 +38,27 @@ public class ShardTest {
 			};
 		};
 		t.start();
-		shard = new DefaultShard<>("127.0.0.1:1980 127.0.0.1:1980 ", 60000,
-				new HashSelector(), new TestPoolableFactoryCreator(), true);
+		shards = new Shards<>("127.0.0.1:6379 127.0.0.1:6379", 60000,
+				new HashSelector(), new PoolableRedisFactoryCreator(), true);
+//		shards = new JedisShards("127.0.0.1:6379 127.0.0.1:6379", 60000,
+//				new HashSelector(), true);
 		// System.out.println(router);
 	}
 
 	@AfterClass
 	public static void unsetup() {
 		serverx.close();
-		shard.close();
+		shards.close();
 	}
 
 	@Test
 	public void testPing() {
 
-		RPCInterface iface = shard.create(RPCInterface.class);
+		RedisComand cmd = shards.create(RedisComand.class);
 		try {
 			for (int i = 0; i < 100; i++) {
-				String pong = iface.ping();
-				assertEquals("pong", pong);
+				String pong = cmd.ping();
+				assertEquals("PONG", pong);
 			}
 
 		} catch (Exception e) {
@@ -63,16 +67,17 @@ public class ShardTest {
 	}
 
 	@Test
-	public void testHello() {
+	public void testSet() {
 
-		RPCInterface iface = shard.create(RPCInterface.class);
+		RedisComand rc = shards.create(RedisComand.class);
 		try {
-			for (int j = 0; j < 10; j++) {
-				String name = "hello" + j;
-				String rv = iface.hello(name);
-				Assert.assertNotNull(rv);
-				assertEquals("hello, " + name, rv);
-
+			for (int i = 0; i < 10; i++) {
+				String key = "K" + i;
+				String value = "V" + i;
+				rc.set(key, value);
+				String v = rc.get(key);
+				Assert.assertNotNull(v);
+				assertEquals(value, v);
 			}
 
 		} catch (Exception e) {

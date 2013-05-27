@@ -49,13 +49,13 @@ import fengfei.shard.Shard;
  * @author
  * 
  */
-public class DefaultShard<T> {
+public class Shards<T> {
 
-	final static int ReadWrite = 0;
-	final static int ReadOnly = 2;
-	final static int WriteOnly = 1;
+	public final static int ReadWrite = 0;
+	public final static int ReadOnly = 2;
+	public final static int WriteOnly = 1;
 
-	private static Logger logger = LoggerFactory.getLogger(DefaultShard.class);
+	private static Logger logger = LoggerFactory.getLogger(Shards.class);
 	protected Pools<T> pools;
 	protected Selector selector = new HashSelector();
 	protected AtomicInteger lastId = new AtomicInteger(0);
@@ -63,7 +63,7 @@ public class DefaultShard<T> {
 	protected GenericObjectPool.Config config = DefaultPools.DefaultConfig;
 	protected PoolableObjectFactoryCreator<T> factoryCreator;
 
-	public DefaultShard(Selector selector,
+	public Shards(Selector selector,
 			PoolableObjectFactoryCreator<T> factoryCreator, boolean isPoolable) {
 		this.selector = selector;
 		this.isPoolable = isPoolable;
@@ -72,7 +72,7 @@ public class DefaultShard<T> {
 		startFailOver();
 	}
 
-	public DefaultShard(Selector selector,
+	public Shards(Selector selector,
 			PoolableObjectFactoryCreator<T> factoryCreator,
 			GenericObjectPool.Config config) {
 		this.selector = selector;
@@ -94,7 +94,7 @@ public class DefaultShard<T> {
 	 * @param selector
 	 * @param isPoolable
 	 */
-	public DefaultShard(String hosts, int timeout, Selector selector,
+	public Shards(String hosts, int timeout, Selector selector,
 			PoolableObjectFactoryCreator<T> factoryCreator, boolean isPoolable) {
 		super();
 		this.isPoolable = isPoolable;
@@ -102,7 +102,7 @@ public class DefaultShard<T> {
 		init(hosts, timeout, selector.getPloy(), null);
 	}
 
-	public DefaultShard(String hosts, int timeout, Selector selector,
+	public Shards(String hosts, int timeout, Selector selector,
 			PoolableObjectFactoryCreator<T> factoryCreator,
 			GenericObjectPool.Config config) {
 		super();
@@ -112,7 +112,7 @@ public class DefaultShard<T> {
 		init(hosts, timeout, selector.getPloy(), config);
 	}
 
-	public DefaultShard(String hosts, int timeout, Ploy ploy,
+	public Shards(String hosts, int timeout, Ploy ploy,
 			PoolableObjectFactoryCreator<T> factoryCreator, boolean isPoolable) {
 		super();
 		this.isPoolable = isPoolable;
@@ -120,7 +120,7 @@ public class DefaultShard<T> {
 		init(hosts, timeout, ploy, null);
 	}
 
-	public DefaultShard(String hosts, int timeout, Ploy ploy,
+	public Shards(String hosts, int timeout, Ploy ploy,
 			PoolableObjectFactoryCreator<T> factoryCreator,
 			GenericObjectPool.Config config) {
 		super();
@@ -163,7 +163,7 @@ public class DefaultShard<T> {
 		return factoryCreator;
 	}
 
-	Failover<T> failOver;
+	protected Failover<T> failOver;
 
 	private void startFailOver() {
 		failOver = new Failover<>(selector, pools);
@@ -270,7 +270,8 @@ public class DefaultShard<T> {
 					throw new Exception("can't connected redis for key:" + key);
 				}
 
-				Method origin = iface.getMethod(method.getName(), argsClass);
+				Method origin = call.getClass().getMethod(method.getName(),
+						argsClass);
 				Object obj = origin.invoke(call, args);
 				return obj;
 			} catch (Throwable e) {
@@ -332,7 +333,8 @@ public class DefaultShard<T> {
 				if (!pof.validateObject(call)) {
 					throw new Exception("redis can't be connected.");
 				}
-				Method origin = iface.getMethod(method.getName(), argsClass);
+				Method origin = call.getClass().getMethod(method.getName(),
+						argsClass);
 				Object obj = origin.invoke(call, args);
 				return obj;
 			} catch (Throwable e) {
