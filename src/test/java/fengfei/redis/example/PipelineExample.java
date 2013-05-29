@@ -3,7 +3,7 @@ package fengfei.redis.example;
 import redis.clients.jedis.Pipeline;
 import fengfei.shard.impl.HashSelector;
 import fengfei.shard.redis.RedisComand;
-import fengfei.shard.redis.ShardRedis;
+import fengfei.shard.redis.ShardsRedis;
 
 public class PipelineExample {
 
@@ -20,7 +20,7 @@ public class PipelineExample {
     }
 
     public static void example1() {
-        ShardRedis redis = new ShardRedis(
+        ShardsRedis redis = new ShardsRedis(
             "172.17.20.73:6380 172.17.20.73:6380",
             60000,
             new HashSelector(),
