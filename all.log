@@ -1,8 +1,8 @@
-2013-05-27 13:09:34.591[DEBUG]: created pool for host: 127.0.0.1:6379
-2013-05-27 13:09:34.597[DEBUG]: pool isn't created, already exists pool for: 127.0.0.1:6379
-2013-05-27 13:09:34.608[DEBUG]: create RedisComand with pool.
-2013-05-27 13:09:34.761[DEBUG]: create RedisComand with pool.
-2013-05-27 13:09:34.838[DEBUG]: created pool for host: 127.0.0.1:1980
-2013-05-27 13:09:34.839[DEBUG]: pool isn't created, already exists pool for: 127.0.0.1:1980
-2013-05-27 13:09:34.841[DEBUG]: create RedisComand with pool.
-2013-05-27 13:09:35.732[DEBUG]: create RedisComand with pool.
+2013-05-31 15:45:18.321[DEBUG]: created pool for host: 127.0.0.1:6379
+2013-05-31 15:45:18.326[DEBUG]: pool isn't created, already exists pool for: 127.0.0.1:6379
+2013-05-31 15:45:18.336[DEBUG]: create RedisComand with pool.
+2013-05-31 15:45:18.549[DEBUG]: create RedisComand with pool.
+2013-05-31 15:45:18.679[DEBUG]: created pool for host: 127.0.0.1:1980
+2013-05-31 15:45:18.680[DEBUG]: pool isn't created, already exists pool for: 127.0.0.1:1980
+2013-05-31 15:45:18.682[DEBUG]: create RedisComand with pool.
+2013-05-31 15:45:19.227[DEBUG]: create RedisComand with pool.
