@@ -11,7 +11,7 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fengfei.shard.AutoHelthCheckThread;
+import fengfei.shard.AutohealthCheckThread;
 import fengfei.shard.InstanceInfo;
 import fengfei.shard.Ploy;
 import fengfei.shard.Pools;
@@ -158,10 +158,10 @@ public class Shards<T> {
         return factoryCreator;
     }
 
-    protected AutoHelthCheckThread<T> failOver;
+    protected AutohealthCheckThread<T> failOver;
 
     private void startFailOver() {
-        failOver = new AutoHelthCheckThread<>(selector, pools);
+        failOver = new AutohealthCheckThread<>(selector, pools);
         failOver.start();
     }
 
