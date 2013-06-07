@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.pool.PoolableObjectFactory;
 
-public class Failover<T> implements Runnable {
+public class AutoHelthCheckThread<T> implements Runnable {
 
     final static int MaxRetryTimes = 10;
     final static int IntervalSecond = 60;
@@ -23,7 +23,7 @@ public class Failover<T> implements Runnable {
     Pools<T> pools;
     Map<InstanceInfo, CheckCounter> checkCounters = new HashMap<>();
 
-    public Failover(Selector selector, Pools<T> pools) {
+    public AutoHelthCheckThread(Selector selector, Pools<T> pools) {
         super();
         this.selector = selector;
         this.pools = pools;

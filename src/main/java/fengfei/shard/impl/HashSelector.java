@@ -6,131 +6,162 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import redis.clients.util.Hashing;
+import fengfei.shard.FailoverType;
 import fengfei.shard.InstanceInfo;
 import fengfei.shard.Ploy;
 import fengfei.shard.Range;
 import fengfei.shard.Selector;
 import fengfei.shard.Shard;
+import fengfei.shard.exception.NonAvailableInstanceException;
 import fengfei.shard.exception.ShardException;
 
 public class HashSelector implements Selector {
 
-	protected List<Shard> shards = new ArrayList<>();
-	protected Lock lock = new ReentrantLock();
-	protected Ploy ploy = new LoopPloy();
-	protected Hashing hashed = Hashing.MD5;
+    protected List<Shard> shards = new ArrayList<>();
+    protected Lock lock = new ReentrantLock();
+    protected Ploy ploy = new LoopPloy();
+    protected Hashing hashed = Hashing.MD5;
+    protected FailoverType failoverType = FailoverType.Exception;
 
-	public HashSelector() {
-		super();
+    public HashSelector() {
+        super();
 
-	}
+    }
 
-	public HashSelector(Ploy ploy) {
-		super();
-		this.ploy = ploy;
-	}
+    public HashSelector(Ploy ploy) {
+        super();
+        this.ploy = ploy;
+    }
 
-	public void addShard(Shard shard) {
-		int index = shards.size();
-		shard.setId(index);
-		shards.add(shard);
-	}
+    public void setFailoverType(FailoverType failoverType) {
+        this.failoverType = failoverType;
+    }
 
-	public void addShard(int index, Shard shard) {
-		shard.setId(index);
-		shards.add(index, shard);
-	}
+    public void addShard(Shard shard) {
+        int index = shards.size();
+        shard.setId(index);
+        shards.add(shard);
+    }
 
-	public void addInstanceInfo(int index, InstanceInfo info) {
-		lock.lock();
-		try {
-			Shard shard = null;
-			if (index >= shards.size()) {
-				InstanceInfo master = info.isMaster() ? info : null;
-				List<InstanceInfo> slaves = new ArrayList<>();
-				if (!info.isMaster()) {
-					slaves.add(info);
-				}
-				shard = new Shard(index, master, slaves);
-			} else {
-				shard = shards.get(index);
-			}
+    public void addShard(int index, Shard shard) {
+        shard.setId(index);
+        shards.add(index, shard);
+    }
 
-			shard.addInstanceInfo(info);
-		} finally {
-			lock.unlock();
-		}
-	}
+    public void addInstanceInfo(int index, InstanceInfo info) {
+        lock.lock();
+        try {
+            Shard shard = null;
+            if (index >= shards.size()) {
+                InstanceInfo master = info.isMaster() ? info : null;
+                List<InstanceInfo> slaves = new ArrayList<>();
+                if (!info.isMaster()) {
+                    slaves.add(info);
+                }
+                shard = new Shard(index, master, slaves);
+            } else {
+                shard = shards.get(index);
+            }
 
-	public int calculate(String key, int shardSize) {
-		int index = (int) Math.abs(hashed.hash(key) % shardSize);
-		return index;
-	}
+            shard.addInstanceInfo(info);
+        } finally {
+            lock.unlock();
+        }
+    }
 
-	public Shard selectShard(int key) {
-		return shards.get(key);
-	}
+    public int calculate(String key, int shardSize) {
+        int index = (int) Math.abs(hashed.hash(key) % shardSize);
+        return index;
+    }
 
-	private static int selectIndex(List<Range[]> list, long key) {
+    public Shard selectShard(int key) {
+        return shards.get(key);
+    }
 
-		for (int j = 0; j < list.size(); j++) {
-			Range[] ranges = list.get(j);
-			for (Range range : ranges) {
-				if (key >= range.start && key <= range.end) {
-					return j;
-				}
-			}
-		}
-		return -1;
-	}
+    private static int selectIndex(List<Range[]> list, long key) {
 
-	@Override
-	public InstanceInfo select(String key, int readWrite) throws ShardException {
-		try {
-			int size = shards.size();
-			int index = calculate(key, size);
-			Shard shard = selectShard(index);
+        for (int j = 0; j < list.size(); j++) {
+            Range[] ranges = list.get(j);
+            for (Range range : ranges) {
+                if (key >= range.start && key <= range.end) {
+                    return j;
+                }
+            }
+        }
+        return -1;
+    }
 
-			if (shard == null) {
-				throw new Exception("can't find shard for key: " + key);
-			}
-			InstanceInfo info = getPloy().select(key, shard, readWrite);
+    @Override
+    public InstanceInfo select(String key, int readWrite) throws ShardException {
+        try {
+            int size = shards.size();
+            int index = calculate(key, size);
 
-			return info;
-		} catch (Exception e) {
-			throw new ShardException("Can't be found one.", e);
-		}
-	}
+            InstanceInfo info = selectInstanceInfo(index, key, readWrite);
 
-	@Override
-	public InstanceInfo selectMaster(String key) throws ShardException {
+            return info;
+        } catch (Exception e) {
+            throw new ShardException("Can't be found one.", e);
+        }
+    }
 
-		return select(key, Write);
+    public InstanceInfo selectInstanceInfo(int index, String key, int readWrite)
+        throws ShardException {
+        try {
+            Shard shard = selectShard(index);
 
-	}
+            if (shard == null) {
+                throw new ShardException("can't find shard for key: " + key);
+            }
+            InstanceInfo info = getPloy().select(key, shard, readWrite);
 
-	@Override
-	public InstanceInfo selectSlave(String key) throws ShardException {
-		return select(key, Read);
+            return info;
+        } catch (NonAvailableInstanceException e) {
+            switch (failoverType) {
+            case Exception:
+                throw new ShardException("Can't be found one.", e);
+            case Next:
+                int idx = index + 1;
+                if (idx > shards.size()) {
+                    idx = 0;
+                }
+                return selectInstanceInfo(idx, key, readWrite);
+            default:
+                throw new ShardException("Can't be found one.", e);
+            }
+        }
 
-	}
+    }
 
-	@Override
-	public InstanceInfo selectAny(String key) throws ShardException {
-		return select(key, ReadWrite);
-	}
+    @Override
+    public InstanceInfo selectMaster(String key) throws ShardException {
 
-	public Ploy getPloy() {
-		return ploy;
-	}
+        return select(key, Write);
 
-	@Override
-	public void setPloy(Ploy ploy) {
-		this.ploy = ploy;
-	}
+    }
 
-	public List<Shard> getShards() {
-		return shards;
-	}
+    @Override
+    public InstanceInfo selectSlave(String key) throws ShardException {
+        return select(key, Read);
+
+    }
+
+    @Override
+    public InstanceInfo selectAny(String key) throws ShardException {
+        return select(key, ReadWrite);
+    }
+
+    public Ploy getPloy() {
+        return ploy;
+    }
+
+    @Override
+    public void setPloy(Ploy ploy) {
+        this.ploy = ploy;
+    }
+
+    public List<Shard> getShards() {
+        return shards;
+    }
 
 }
