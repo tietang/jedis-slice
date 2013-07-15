@@ -155,7 +155,10 @@ public class ShardsRedis extends Shards<Jedis> {
 					key = String.valueOf(random.nextInt());
 				}
 				info = selector.select(new String(key), readWrite);
-
+				if (!info.isAvailable()) {
+					throw new Exception("The Redis is unavailable for key:"
+							+ key);
+				}
 				jedis = pools.borrow(info);
 				if (jedis == null) {
 					throw new Exception("can't connected redis for key:" + key);
@@ -193,7 +196,7 @@ public class ShardsRedis extends Shards<Jedis> {
 				throws Throwable {
 
 			Jedis jedis = null;
-			InstanceInfo ShardInfo = null;
+			InstanceInfo info = null;
 			try {
 				byte[] key = null;
 
@@ -215,9 +218,12 @@ public class ShardsRedis extends Shards<Jedis> {
 					// argsClass = new Class<?>[] {};
 					key = String.valueOf(random.nextLong()).getBytes();
 				}
-				ShardInfo = selector.select(new String(key), readWrite);
-
-				jedis = jedisConnect(ShardInfo);
+				info = selector.select(new String(key), readWrite);
+				if (!info.isAvailable()) {
+					throw new Exception("The Server is unavailable for key:"
+							+ key);
+				}
+				jedis = jedisConnect(info);
 				if (jedis == null) {
 					throw new Exception("can't connected redis");
 				}

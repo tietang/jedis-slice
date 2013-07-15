@@ -264,17 +264,19 @@ public class Shards<T> {
                     key = String.valueOf(random.nextInt());
                 }
                 info = selector.select(new String(key), readWrite);
-
+                if(!info.isAvailable()){
+                	 throw new Exception("The Server is unavailable for key:" + key);
+                }
                 call = pools.borrow(info);
                 if (call == null) {
-                    throw new Exception("can't connected redis for key:" + key);
+                    throw new Exception("can't connected server for key:" + key);
                 }
 
                 Method origin = call.getClass().getMethod(method.getName(), argsClass);
                 Object obj = origin.invoke(call, args);
                 return obj;
             } catch (Throwable e) {
-                logger.error("Can not operate redis for key:" + key, e);
+                logger.error("Can not operate server for key:" + key, e);
                 throw e;
 
             } finally {
@@ -327,16 +329,16 @@ public class Shards<T> {
                 call = pof.makeObject();
 
                 if (call == null) {
-                    throw new Exception("can't connected redis");
+                    throw new Exception("Can't connected redis");
                 }
                 if (!pof.validateObject(call)) {
-                    throw new Exception("redis can't be connected.");
+                    throw new Exception("Server can't be connected.");
                 }
                 Method origin = call.getClass().getMethod(method.getName(), argsClass);
                 Object obj = origin.invoke(call, args);
                 return obj;
             } catch (Throwable e) {
-                logger.error("Can not operate redis ", e);
+                logger.error("Can not operate Server ", e);
                 throw e;
 
             } finally {
@@ -345,7 +347,7 @@ public class Shards<T> {
                     pof.destroyObject(call);
 
                 } catch (Exception e) {
-                    logger.error("close jedis error ", e);
+                    logger.error("close connection error ", e);
                 }
             }
         }

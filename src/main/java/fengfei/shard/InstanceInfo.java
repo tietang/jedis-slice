@@ -57,6 +57,11 @@ public class InstanceInfo {
 		this.status = status;
 	}
 
+	public boolean isAvailable() {
+		return this.status == Status.Normal;
+
+	}
+
 	public void setMaster(boolean isMaster) {
 		this.isMaster = isMaster;
 	}
