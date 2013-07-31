@@ -14,9 +14,9 @@
 
 
 	<scm>
-		<connection>scm:git:https://github.com/wtt2012/jedis-slice.git</connection>
-		<url>scm:git:https://github.com/wtt2012/jedis-slice.git</url>
-		<developerConnection>scm:git:https://github.com/wtt2012/jedis-slice.git</developerConnection>
+		<connection>scm:git:https://github.com/tietang/jedis-slice.git</connection>
+		<url>scm:git:https://github.com/tietang/jedis-slice.git</url>
+		<developerConnection>scm:git:https://github.com/tietang/jedis-slice.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 	<build>
