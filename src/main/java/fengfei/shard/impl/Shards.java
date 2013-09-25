@@ -1,22 +1,18 @@
 package fengfei.shard.impl;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import fengfei.shard.*;
+import fengfei.shard.exception.UnavailableInstanceException;
 import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fengfei.shard.AutohealthCheckThread;
-import fengfei.shard.InstanceInfo;
-import fengfei.shard.Ploy;
-import fengfei.shard.Pools;
-import fengfei.shard.Selector;
-import fengfei.shard.Shard;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * <pre>
@@ -27,8 +23,8 @@ import fengfei.shard.Shard;
  * 		RedisComand rc = redis.createRedisCommand();
  * 	    rc.set("key", "value");
  * 		redis.close();
- * 
- * * example 2: 
+ *
+ * * example 2:
  * 		Selector selector = new Hashselector();
  * 		selector.setTimeout(60);
  * 		selector.setPoolConfig(config);
@@ -39,13 +35,12 @@ import fengfei.shard.Shard;
  * 		//Shard 1: master:192.168.1.6:6379 slave:192.168.1.7:6379 192.168.1.8:6379
  * 		selector.addShard(0, "192.168.1.6:6379", "192.168.1.7:6379",
  * 				"192.168.1.8:6379");
- * 
+ *
  * 		PoolableSharddRedis redis = new PoolableSharddRedis(selector);
  * 		RedisComand rc = redis.createRedisCommand();
  * </pre>
- * 
+ *
  * @author
- * 
  */
 public class Shards<T> {
 
@@ -58,13 +53,14 @@ public class Shards<T> {
     protected Selector selector = new HashSelector();
     protected AtomicInteger lastId = new AtomicInteger(0);
     protected boolean isPoolable = false;
+    protected boolean immediatelyReconnect = true;
     protected GenericObjectPool.Config config = DefaultPools.DefaultConfig;
     protected PoolableObjectFactoryCreator<T> factoryCreator;
 
     public Shards(
-        Selector selector,
-        PoolableObjectFactoryCreator<T> factoryCreator,
-        boolean isPoolable) {
+            Selector selector,
+            PoolableObjectFactoryCreator<T> factoryCreator,
+            boolean isPoolable) {
         this.selector = selector;
         this.isPoolable = isPoolable;
         this.factoryCreator = factoryCreator;
@@ -73,9 +69,9 @@ public class Shards<T> {
     }
 
     public Shards(
-        Selector selector,
-        PoolableObjectFactoryCreator<T> factoryCreator,
-        GenericObjectPool.Config config) {
+            Selector selector,
+            PoolableObjectFactoryCreator<T> factoryCreator,
+            GenericObjectPool.Config config) {
         this.selector = selector;
         this.isPoolable = true;
         this.factoryCreator = factoryCreator;
@@ -86,21 +82,21 @@ public class Shards<T> {
 
     /**
      * <pre>
-     * 
+     *
      *  hosts: MasterHost:port[,SlaveHost:port...] MasterHost:port[,SlaveHost:port...] ...
      * </pre>
-     * 
+     *
      * @param hosts
      * @param timeout
      * @param selector
      * @param isPoolable
      */
     public Shards(
-        String hosts,
-        int timeout,
-        Selector selector,
-        PoolableObjectFactoryCreator<T> factoryCreator,
-        boolean isPoolable) {
+            String hosts,
+            int timeout,
+            Selector selector,
+            PoolableObjectFactoryCreator<T> factoryCreator,
+            boolean isPoolable) {
         super();
         this.isPoolable = isPoolable;
         this.factoryCreator = factoryCreator;
@@ -109,11 +105,11 @@ public class Shards<T> {
     }
 
     public Shards(
-        String hosts,
-        int timeout,
-        Selector selector,
-        PoolableObjectFactoryCreator<T> factoryCreator,
-        GenericObjectPool.Config config) {
+            String hosts,
+            int timeout,
+            Selector selector,
+            PoolableObjectFactoryCreator<T> factoryCreator,
+            GenericObjectPool.Config config) {
         super();
         this.isPoolable = true;
         this.config = config;
@@ -123,11 +119,11 @@ public class Shards<T> {
     }
 
     public Shards(
-        String hosts,
-        int timeout,
-        Ploy ploy,
-        PoolableObjectFactoryCreator<T> factoryCreator,
-        boolean isPoolable) {
+            String hosts,
+            int timeout,
+            Ploy ploy,
+            PoolableObjectFactoryCreator<T> factoryCreator,
+            boolean isPoolable) {
         super();
         this.isPoolable = isPoolable;
         this.factoryCreator = factoryCreator;
@@ -135,11 +131,11 @@ public class Shards<T> {
     }
 
     public Shards(
-        String hosts,
-        int timeout,
-        Ploy ploy,
-        PoolableObjectFactoryCreator<T> factoryCreator,
-        GenericObjectPool.Config config) {
+            String hosts,
+            int timeout,
+            Ploy ploy,
+            PoolableObjectFactoryCreator<T> factoryCreator,
+            GenericObjectPool.Config config) {
         super();
         this.isPoolable = true;
         this.config = config;
@@ -158,11 +154,15 @@ public class Shards<T> {
         return factoryCreator;
     }
 
-    protected AutohealthCheckThread<T> failOver;
+    public void setImmediatelyReconnect(boolean immediatelyReconnect) {
+        this.immediatelyReconnect = immediatelyReconnect;
+    }
+
+    protected AutoHealthCheckThread<T> autoHealthCheckThread;
 
     private void startFailOver() {
-        failOver = new AutohealthCheckThread<>(selector, pools);
-        failOver.start();
+        autoHealthCheckThread = new AutoHealthCheckThread<>(selector, pools);
+        autoHealthCheckThread.start();
     }
 
     protected void createPool(Shard shard, GenericObjectPool.Config config) {
@@ -185,12 +185,12 @@ public class Shards<T> {
 
     /**
      * <pre>
-     * eg: 
+     * eg:
      *  	masterHost : 192.168.1.22:6300
      *  	slaveHosts : 192.168.1.22:6301,192.168.1.22:6302,192.168.1.22:6303
      * 	addHosts("192.168.1.22:6300", "192.168.1.22:6301", "192.168.1.22:6302", "192.168.1.22:6303")
      * </pre>
-     * 
+     *
      * @param masterHost
      * @param slaveHosts
      */
@@ -215,13 +215,51 @@ public class Shards<T> {
             handler = new Handler<I>(iface, rw);
             logger.debug("create RedisComand without pool.");
         }
-        return (I) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] { iface }, handler);
+        return (I) Proxy.newProxyInstance(iface.getClassLoader(), new Class[]{iface}, handler);
+    }
+
+    public void healthCheck() {
+        List<Shard> shards = selector.getShards();
+        for (Shard shard : shards) {
+            List<InstanceInfo> infos = shard.getConfigedInfos();
+            for (InstanceInfo info : infos) {
+                boolean isConnected = test(info);
+                if (isConnected) {
+                    shard.recover(info);
+                    pools.createPool(info);
+                } else {
+                    shard.cancel(info);
+                    pools.remove(info);
+                }
+            }
+        }
+
+    }
+
+    private boolean test(InstanceInfo info) {
+        T t = null;
+        PoolableObjectFactory<T> poolableObjectFactory = pools
+                .getPoolableObjectFactoryCreator()
+                .create(info);
+        try {
+            t = poolableObjectFactory.makeObject();
+            return poolableObjectFactory.validateObject(t);
+        } catch (Exception e) {
+            // e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                poolableObjectFactory.destroyObject(t);
+            } catch (Exception e) {
+                // e.printStackTrace();
+            }
+        }
     }
 
     public void close() {
         if (isPoolable)
             pools.closeAll();
-        failOver.exit();
+        autoHealthCheckThread.exit();
     }
 
     Random random = new Random(19800202);
@@ -264,20 +302,20 @@ public class Shards<T> {
                     key = String.valueOf(random.nextInt());
                 }
                 info = selector.select(new String(key), readWrite);
-                if(!info.isAvailable()){
-                	 throw new Exception("The Server is unavailable for key:" + key);
+                if (!info.isAvailable() && !immediatelyReconnect) {
+                    autoHealthCheckThread.add(info);
+                    throw new UnavailableInstanceException("The Server is unavailable for key:" + key);
                 }
                 call = pools.borrow(info);
-                if (call == null) {
-                    throw new Exception("can't connected server for key:" + key);
+                if (call == null && immediatelyReconnect) {
+                    call = getPoolableObjectFactoryCreator().create(info).makeObject();
                 }
-
+                if (call == null) {
+                    throw new UnavailableInstanceException("Can't connected server for key:" + key);
+                }
                 Method origin = call.getClass().getMethod(method.getName(), argsClass);
                 Object obj = origin.invoke(call, args);
                 return obj;
-            } catch (Throwable e) {
-                logger.error("Can not operate server for key:" + key, e);
-                throw e;
 
             } finally {
                 pools.returnPool(info, call);
@@ -329,17 +367,14 @@ public class Shards<T> {
                 call = pof.makeObject();
 
                 if (call == null) {
-                    throw new Exception("Can't connected redis");
+                    throw new UnavailableInstanceException("Can't connected redis");
                 }
                 if (!pof.validateObject(call)) {
-                    throw new Exception("Server can't be connected.");
+                    throw new UnavailableInstanceException("Server can't be connected.");
                 }
                 Method origin = call.getClass().getMethod(method.getName(), argsClass);
                 Object obj = origin.invoke(call, args);
                 return obj;
-            } catch (Throwable e) {
-                logger.error("Can not operate Server ", e);
-                throw e;
 
             } finally {
                 try {

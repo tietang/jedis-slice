@@ -1,23 +1,18 @@
 package fengfei.shard.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
+import fengfei.shard.InstanceInfo;
+import fengfei.shard.Pools;
+import fengfei.shard.Selector;
+import fengfei.shard.Shard;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fengfei.shard.InstanceInfo;
-import fengfei.shard.Pools;
-import fengfei.shard.Selector;
-import fengfei.shard.Shard;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DefaultPools<T> implements Pools<T> {
 
@@ -26,6 +21,7 @@ public class DefaultPools<T> implements Pools<T> {
     protected PoolableObjectFactoryCreator<T> factoryCreator;
     protected GenericObjectPool.Config config;
     public static GenericObjectPool.Config DefaultConfig;
+
     static {
         DefaultConfig = new GenericObjectPool.Config();
         DefaultConfig.maxActive = 10;
@@ -71,6 +67,7 @@ public class DefaultPools<T> implements Pools<T> {
             pool.close();
             pool.clear();
             pool = null;
+
         } catch (Throwable e) {
             logger.error("clear pool error for:" + info.toString(), e);
         }
@@ -116,21 +113,24 @@ public class DefaultPools<T> implements Pools<T> {
 
     }
 
+
     public void remove(InstanceInfo info) {
         ObjectPool<T> pool = poolMap.remove(info);
         close(pool, info);
     }
 
     public T borrow(InstanceInfo info)
-        throws NoSuchElementException,
-        IllegalStateException,
-        Exception {
+            throws NoSuchElementException,
+            IllegalStateException,
+            Exception {
         ObjectPool<T> pool = poolMap.get(info);
         return pool.borrowObject();
     }
 
     public void returnPool(InstanceInfo info, T T) throws Exception {
         ObjectPool<T> pool = poolMap.get(info);
-        pool.returnObject(T);
+        if (pool != null) {
+            pool.returnObject(T);
+        }
     }
 }

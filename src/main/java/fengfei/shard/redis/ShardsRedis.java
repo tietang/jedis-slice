@@ -3,10 +3,7 @@ package fengfei.shard.redis;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.slf4j.Logger;
@@ -14,14 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
-import fengfei.shard.AutohealthCheckThread;
 import fengfei.shard.InstanceInfo;
 import fengfei.shard.Ploy;
-import fengfei.shard.Pools;
 import fengfei.shard.Selector;
-import fengfei.shard.Shard;
-import fengfei.shard.impl.DefaultPools;
-import fengfei.shard.impl.HashSelector;
 import fengfei.shard.impl.Shards;
 
 /**
