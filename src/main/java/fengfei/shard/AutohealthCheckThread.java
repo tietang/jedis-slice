@@ -30,7 +30,7 @@ public class AutohealthCheckThread<T> implements Runnable {
     }
 
     public void start() {
-        scheduledExecutorService.scheduleAtFixedRate(this, 1, 1, TimeUnit.MINUTES);
+        scheduledExecutorService.scheduleAtFixedRate(this, 10, 10, TimeUnit.SECONDS);
     }
 
     public void exit() {
@@ -84,8 +84,8 @@ public class AutohealthCheckThread<T> implements Runnable {
     private boolean test(InstanceInfo info) {
         T t = null;
         PoolableObjectFactory<T> poolableObjectFactory = pools
-            .getPoolableObjectFactoryCreator()
-            .create(info);
+                .getPoolableObjectFactoryCreator()
+                .create(info);
         try {
             t = poolableObjectFactory.makeObject();
             return poolableObjectFactory.validateObject(t);
