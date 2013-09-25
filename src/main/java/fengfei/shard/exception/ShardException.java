@@ -12,8 +12,8 @@ public class ShardException extends Exception {
         super(message, cause);
     }
 
-    @Override
-    public synchronized Throwable fillInStackTrace() {
-        return null;// super.fillInStackTrace();
-    }
+//    @Override
+//    public synchronized Throwable fillInStackTrace() {
+//        return null;// super.fillInStackTrace();
+//    }
 }

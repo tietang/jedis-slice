@@ -31,7 +31,7 @@ public class RedisTest {
     }
 
     public static void main(String[] args) {
-        shards = new Shards<>("127.0.0.1:6379 127.0.0.1:6379", 60000,
+        shards = new Shards<Jedis>("127.0.0.1:6379 127.0.0.1:6379", 60000,
                 new HashSelector(), new PoolableRedisFactoryCreator(), true);
         RedisComand cmd = shards.create(RedisComand.class);
 

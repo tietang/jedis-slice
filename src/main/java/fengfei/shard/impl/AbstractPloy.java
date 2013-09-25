@@ -9,7 +9,7 @@ import fengfei.shard.Ploy;
 import fengfei.shard.Selector;
 import fengfei.shard.Shard;
 import fengfei.shard.Status;
-import fengfei.shard.exception.NonAvailableInstanceException;
+import fengfei.shard.exception.NoAvailableInstanceException;
 import fengfei.shard.exception.ShardException;
 
 public abstract class AbstractPloy implements Ploy {
@@ -32,11 +32,11 @@ public abstract class AbstractPloy implements Ploy {
 			break;
 		}
 		if (info == null) {
-			throw new NonAvailableInstanceException("Can't find instance for key: " + key);
+			throw new NoAvailableInstanceException("Can't find instance for key: " + key);
 		}
 
 		if (info.getStatus() != Status.Normal) {
-			throw new NonAvailableInstanceException(
+			throw new NoAvailableInstanceException(
 					"Current instance is unavailable, cause is "
 							+ info.getStatus().name() + ", "
 							+ info.toInfoString());
@@ -67,7 +67,7 @@ public abstract class AbstractPloy implements Ploy {
 
 		if (failSlaves.size() == allSlaves.size()
 				&& failSlaves.equals(allSlaves)) {
-			throw new NonAvailableInstanceException(
+			throw new NoAvailableInstanceException(
 					"Current shard has not available instance for key: " + key);
 		}
 

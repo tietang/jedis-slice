@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import fengfei.shard.exception.NoAvailableInstanceException;
 import redis.clients.util.Hashing;
 import fengfei.shard.FailoverType;
 import fengfei.shard.InstanceInfo;
@@ -12,7 +13,6 @@ import fengfei.shard.Ploy;
 import fengfei.shard.Range;
 import fengfei.shard.Selector;
 import fengfei.shard.Shard;
-import fengfei.shard.exception.NonAvailableInstanceException;
 import fengfei.shard.exception.ShardException;
 
 public class HashSelector implements Selector {
@@ -93,20 +93,18 @@ public class HashSelector implements Selector {
 
     @Override
     public InstanceInfo select(String key, int readWrite) throws ShardException {
-        try {
-            int size = shards.size();
-            int index = calculate(key, size);
 
-            InstanceInfo info = selectInstanceInfo(index, key, readWrite);
+        int size = shards.size();
+        int index = calculate(key, size);
 
-            return info;
-        } catch (Exception e) {
-            throw new ShardException("Can't be found one.", e);
-        }
+        InstanceInfo info = selectInstanceInfo(index, key, readWrite);
+
+        return info;
+
     }
 
     public InstanceInfo selectInstanceInfo(int index, String key, int readWrite)
-        throws ShardException {
+            throws ShardException {
         try {
             Shard shard = selectShard(index);
 
@@ -116,18 +114,18 @@ public class HashSelector implements Selector {
             InstanceInfo info = getPloy().select(key, shard, readWrite);
 
             return info;
-        } catch (NonAvailableInstanceException e) {
+        } catch (NoAvailableInstanceException e) {
             switch (failoverType) {
-            case Exception:
-                throw new ShardException("Can't be found one.", e);
-            case Next:
-                int idx = index + 1;
-                if (idx > shards.size()) {
-                    idx = 0;
-                }
-                return selectInstanceInfo(idx, key, readWrite);
-            default:
-                throw new ShardException("Can't be found one.", e);
+                case Exception:
+                    throw e;
+                case Next:
+                    int idx = index + 1;
+                    if (idx > shards.size()) {
+                        idx = 0;
+                    }
+                    return selectInstanceInfo(idx, key, readWrite);
+                default:
+                    throw e;
             }
         }
 
