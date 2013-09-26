@@ -1,14 +1,14 @@
 package fengfei.shard.performance;
 
-import org.apache.commons.pool.impl.GenericObjectPool.Config;
-
 import fengfei.shard.Ploy;
 import fengfei.shard.Selector;
 import fengfei.shard.impl.LoopPloy;
+import fengfei.shard.redis.JedisShards;
 import fengfei.shard.redis.RedisComand;
-import fengfei.shard.redis.ShardsRedis;
+import org.apache.commons.pool.impl.GenericObjectPool.Config;
 
 public class WriteReadMain implements Runnable {
+
 
     // for test
     private static long sleepTime = 0;
@@ -59,11 +59,11 @@ public class WriteReadMain implements Runnable {
         Count.setStartWriteNum(startWriteNum);
         Config cfg = new Config();
         Ploy ploy = new LoopPloy();
-        ShardsRedis redis = new ShardsRedis("127.0.0.1:6379,127.0.0.1:6379", 3000, ploy, cfg);
+        JedisShards redis = new JedisShards("127.0.0.1:6379,127.0.0.1:6379", 3000, ploy, cfg);
 
         //
-        RedisComand read = redis.createRedisCommand();
-        RedisComand write = redis.createRedisCommand(Selector.Write);
+        RedisComand read = redis.create(RedisComand.class);
+        RedisComand write = redis.create(RedisComand.class, Selector.Write);
         try {
             final WriteReadService writeRead = new WriteReadService(write, read);
 

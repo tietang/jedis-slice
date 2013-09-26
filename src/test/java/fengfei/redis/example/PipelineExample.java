@@ -1,9 +1,9 @@
 package fengfei.redis.example;
 
-import redis.clients.jedis.Pipeline;
 import fengfei.shard.impl.HashSelector;
+import fengfei.shard.redis.JedisShards;
 import fengfei.shard.redis.RedisComand;
-import fengfei.shard.redis.ShardsRedis;
+import redis.clients.jedis.Pipeline;
 
 public class PipelineExample {
 
@@ -20,14 +20,14 @@ public class PipelineExample {
     }
 
     public static void example1() {
-        ShardsRedis redis = new ShardsRedis(
-            "172.17.20.73:6380 172.17.20.73:6380",
-            60000,
-            new HashSelector(),
-            isPoolable);
-        RedisComand rc = redis.createRedisCommand();
+        JedisShards redis = new JedisShards(
+                "172.17.20.73:6380 172.17.20.73:6380",
+                60000,
+                new HashSelector(),
+                isPoolable);
+        RedisComand rc = redis.create(RedisComand.class);
         rc.flushDB();
-        
+
         Pipeline p = rc.pipelined();
         for (int i = 0; i < 10; i++) {
             p.set("K" + i, "V" + i);

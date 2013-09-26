@@ -37,9 +37,10 @@ public class RedisTest {
 
         for (; ; ) {
             try {
+                Thread.sleep(1000);
                 String pong = cmd.ping();
                 System.out.println(pong);
-                Thread.sleep(1000);
+
             } catch (Exception e) {
                 logger.error("XXX: ", e);
             }

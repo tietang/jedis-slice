@@ -3,11 +3,11 @@ package fengfei.redis.example;
 import fengfei.shard.Ploy;
 import fengfei.shard.Selector;
 import fengfei.shard.Shard;
-import fengfei.shard.impl.LoopPloy;
 import fengfei.shard.impl.HashModSelector;
+import fengfei.shard.impl.LoopPloy;
 import fengfei.shard.impl.ModuleSelector;
+import fengfei.shard.redis.JedisShards;
 import fengfei.shard.redis.RedisComand;
-import fengfei.shard.redis.ShardsRedis;
 
 public class ShardRedisExample {
 
@@ -21,17 +21,17 @@ public class ShardRedisExample {
 
 //        example1();
 //         example2();
-         example3();
+        example3();
 
     }
 
     public static void example1() {
-        ShardsRedis redis = new ShardsRedis(
-            "127.0.0.1:6379 127.0.0.1:6379",
-            60000,
-            new HashModSelector(),
-            isPoolable);
-        RedisComand rc = redis.createRedisCommand();
+        JedisShards redis = new JedisShards(
+                "127.0.0.1:6379 127.0.0.1:6379",
+                60000,
+                new HashModSelector(),
+                isPoolable);
+        RedisComand rc = redis.create(RedisComand.class);
 
         for (int i = 0; i < 10; i++) {
 
@@ -47,12 +47,12 @@ public class ShardRedisExample {
     }
 
     public static void example2() {
-        ShardsRedis redis = new ShardsRedis(
-            "127.0.0.1:6379 127.0.0.1:6379 127.0.0.1:6379",
-            6,
-            new ModuleSelector(),
-            isPoolable);
-        RedisComand rc = redis.createRedisCommand();
+        JedisShards redis = new JedisShards(
+                "127.0.0.1:6379 127.0.0.1:6379 127.0.0.1:6379",
+                6,
+                new ModuleSelector(),
+                isPoolable);
+        RedisComand rc = redis.create(RedisComand.class);
         for (int i = 0; i < 10; i++) {
             System.out.println(rc.ping());
             rc.set("" + i, "V" + i);
@@ -75,22 +75,22 @@ public class ShardRedisExample {
         // Shard 0: master:192.738.1.3:6379 slave:192.738.1.4:6379
         // 192.738.1.5:6379
         Shard Shard0 = Shard.createShard(
-            timeout,
-            "172.17.20.73:6379",
-            "127.0.0.1:6379",
-            "172.17.20.73:6381");
+                timeout,
+                "172.17.20.73:6379",
+                "127.0.0.1:6379",
+                "172.17.20.73:6381");
         selector.addShard(0, Shard0);
         // Shard 1: master:192.738.1.6:6379 slave:192.738.1.7:6379
         // 192.738.1.8:6379
         Shard Shard1 = Shard.createShard(
-            timeout,
-            "127.0.0.1:6379",
-            "127.0.0.1:6379",
-            "127.0.0.1:6379");
+                timeout,
+                "127.0.0.1:6379",
+                "127.0.0.1:6379",
+                "127.0.0.1:6379");
         selector.addShard(1, Shard1);
 
-        ShardsRedis redis = new ShardsRedis(selector, isPoolable);
-        RedisComand rc = redis.createRedisCommand();
+        JedisShards redis = new JedisShards(selector, isPoolable);
+        RedisComand rc = redis.create(RedisComand.class);
         for (int i = 0; i < 10; i++) {
             rc.set("" + i, "V" + i);
         }

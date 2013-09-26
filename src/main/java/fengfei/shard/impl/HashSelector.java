@@ -1,19 +1,14 @@
 package fengfei.shard.impl;
 
+import fengfei.shard.*;
+import fengfei.shard.exception.NoAvailableInstanceException;
+import fengfei.shard.exception.ShardException;
+import redis.clients.util.Hashing;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import fengfei.shard.exception.NoAvailableInstanceException;
-import redis.clients.util.Hashing;
-import fengfei.shard.FailoverType;
-import fengfei.shard.InstanceInfo;
-import fengfei.shard.Ploy;
-import fengfei.shard.Range;
-import fengfei.shard.Selector;
-import fengfei.shard.Shard;
-import fengfei.shard.exception.ShardException;
 
 public class HashSelector implements Selector {
 

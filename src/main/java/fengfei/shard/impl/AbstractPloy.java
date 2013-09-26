@@ -1,16 +1,12 @@
 package fengfei.shard.impl;
 
+import fengfei.shard.*;
+import fengfei.shard.exception.NoAvailableInstanceException;
+import fengfei.shard.exception.ShardException;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-
-import fengfei.shard.InstanceInfo;
-import fengfei.shard.Ploy;
-import fengfei.shard.Selector;
-import fengfei.shard.Shard;
-import fengfei.shard.Status;
-import fengfei.shard.exception.NoAvailableInstanceException;
-import fengfei.shard.exception.ShardException;
 
 public abstract class AbstractPloy implements Ploy {
 	@Override
@@ -62,7 +58,6 @@ public abstract class AbstractPloy implements Ploy {
 	protected InstanceInfo get(List<InstanceInfo> all,
 			HashSet<InstanceInfo> failSlaves, Shard shard, String key)
 			throws ShardException {
-
 		HashSet<InstanceInfo> allSlaves = new HashSet<>(all);
 
 		if (failSlaves.size() == allSlaves.size()
@@ -77,7 +72,7 @@ public abstract class AbstractPloy implements Ploy {
 		if (info.getStatus() != Status.Normal) {
 			failSlaves.add(info);
 			info = get(all, failSlaves, shard, key);
-		}
+        }
 		return info;
 	}
 
