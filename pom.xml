@@ -13,6 +13,7 @@
     </properties>
 
 
+
     <scm>
         <connection>scm:git:https://github.com/tietang/jedis-slice.git</connection>
         <url>scm:git:https://github.com/tietang/jedis-slice.git</url>
