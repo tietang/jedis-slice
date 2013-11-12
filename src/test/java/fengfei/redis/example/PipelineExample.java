@@ -2,7 +2,7 @@ package fengfei.redis.example;
 
 import fengfei.shard.impl.HashSelector;
 import fengfei.shard.redis.JedisShards;
-import fengfei.shard.redis.RedisComand;
+import fengfei.shard.redis.RedisCommand;
 import redis.clients.jedis.Pipeline;
 
 public class PipelineExample {
@@ -25,7 +25,7 @@ public class PipelineExample {
                 60000,
                 new HashSelector(),
                 isPoolable);
-        RedisComand rc = redis.create(RedisComand.class);
+        RedisCommand rc = redis.create(RedisCommand.class);
         rc.flushDB();
 
         Pipeline p = rc.pipelined();

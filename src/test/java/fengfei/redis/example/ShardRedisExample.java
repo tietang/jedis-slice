@@ -7,7 +7,7 @@ import fengfei.shard.impl.HashModSelector;
 import fengfei.shard.impl.LoopPloy;
 import fengfei.shard.impl.ModuleSelector;
 import fengfei.shard.redis.JedisShards;
-import fengfei.shard.redis.RedisComand;
+import fengfei.shard.redis.RedisCommand;
 
 public class ShardRedisExample {
 
@@ -31,7 +31,7 @@ public class ShardRedisExample {
                 60000,
                 new HashModSelector(),
                 isPoolable);
-        RedisComand rc = redis.create(RedisComand.class);
+        RedisCommand rc = redis.create(RedisCommand.class);
 
         for (int i = 0; i < 10; i++) {
 
@@ -52,7 +52,7 @@ public class ShardRedisExample {
                 6,
                 new ModuleSelector(),
                 isPoolable);
-        RedisComand rc = redis.create(RedisComand.class);
+        RedisCommand rc = redis.create(RedisCommand.class);
         for (int i = 0; i < 10; i++) {
             System.out.println(rc.ping());
             rc.set("" + i, "V" + i);
@@ -90,7 +90,7 @@ public class ShardRedisExample {
         selector.addShard(1, Shard1);
 
         JedisShards redis = new JedisShards(selector, isPoolable);
-        RedisComand rc = redis.create(RedisComand.class);
+        RedisCommand rc = redis.create(RedisCommand.class);
         for (int i = 0; i < 10; i++) {
             rc.set("" + i, "V" + i);
         }

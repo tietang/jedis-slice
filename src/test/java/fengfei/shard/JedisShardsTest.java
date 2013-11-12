@@ -3,6 +3,7 @@ package fengfei.shard;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import fengfei.shard.redis.RedisCommand;
 import org.apache.commons.pool.PoolableObjectFactory;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -15,7 +16,6 @@ import fengfei.shard.impl.HashSelector;
 import fengfei.shard.impl.PoolableObjectFactoryCreator;
 import fengfei.shard.impl.Shards;
 import fengfei.shard.redis.PoolableRedisFactoryCreator;
-import fengfei.shard.redis.RedisComand;
 
 public class JedisShardsTest {
 
@@ -42,7 +42,7 @@ public class JedisShardsTest {
 	@Test
 	public void testPing() {
 
-		RedisComand cmd = shards.create(RedisComand.class);
+		RedisCommand cmd = shards.create(RedisCommand.class);
 		try {
 			for (int i = 0; i < 100; i++) {
 				String pong = cmd.ping();
@@ -57,7 +57,7 @@ public class JedisShardsTest {
 	@Test
 	public void testSet() {
 
-		RedisComand rc = shards.create(RedisComand.class);
+		RedisCommand rc = shards.create(RedisCommand.class);
 		try {
 			for (int i = 0; i < 10; i++) {
 				String key = "K" + i;

@@ -3,7 +3,7 @@ package fengfei.shard;
 import fengfei.shard.impl.HashSelector;
 import fengfei.shard.impl.Shards;
 import fengfei.shard.redis.PoolableRedisFactoryCreator;
-import fengfei.shard.redis.RedisComand;
+import fengfei.shard.redis.RedisCommand;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class RedisTest {
     public static void main(String[] args) {
         shards = new Shards<Jedis>("127.0.0.1:6379 127.0.0.1:6379", 60000,
                 new HashSelector(), new PoolableRedisFactoryCreator(), true);
-        RedisComand cmd = shards.create(RedisComand.class);
+        RedisCommand cmd = shards.create(RedisCommand.class);
 
         for (; ; ) {
             try {
@@ -58,7 +58,7 @@ public class RedisTest {
     @Test
     public void testPing() {
 
-        RedisComand cmd = shards.create(RedisComand.class);
+        RedisCommand cmd = shards.create(RedisCommand.class);
         try {
             for (int i = 0; i < 100; i++) {
                 String pong = cmd.ping();
@@ -73,7 +73,7 @@ public class RedisTest {
     @Test
     public void testSet() {
 
-        RedisComand rc = shards.create(RedisComand.class);
+        RedisCommand rc = shards.create(RedisCommand.class);
         try {
             for (int i = 0; i < 10; i++) {
                 String key = "K" + i;

@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 		PoolableSharddRedis redis = new PoolableSharddRedis(
  * 				"192.168.1.3:6379,192.168.1.4:6379,192.168.1.5:6379 192.168.1.6:6379,192.168.1.7:6379,192.168.1.8:6379", 60000, new Hashselector(),
  * 				config);
- * 		RedisComand rc = redis.createRedisCommand();
+ * 		RedisCommand rc = redis.createRedisCommand();
  * 	    rc.set("key", "value");
  * 		redis.close();
  *
@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 				"192.168.1.8:6379");
  *
  * 		PoolableSharddRedis redis = new PoolableSharddRedis(selector);
- * 		RedisComand rc = redis.createRedisCommand();
+ * 		RedisCommand rc = redis.createRedisCommand();
  * </pre>
  *
  * @author
@@ -196,10 +196,10 @@ public class Shards<T> {
         InvocationHandler handler = null;
         if (isPoolable) {
             handler = new PoolableHandler<I>(iface, rw);
-            logger.debug("create RedisComand with pool.");
+            logger.debug("create RedisCommand with pool.");
         } else {
             handler = new Handler<I>(iface, rw);
-            logger.debug("create RedisComand without pool.");
+            logger.debug("create RedisCommand without pool.");
         }
         return (I) Proxy.newProxyInstance(iface.getClassLoader(),
                 new Class[]{iface}, handler);

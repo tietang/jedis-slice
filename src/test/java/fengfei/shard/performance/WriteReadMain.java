@@ -4,7 +4,7 @@ import fengfei.shard.Ploy;
 import fengfei.shard.Selector;
 import fengfei.shard.impl.LoopPloy;
 import fengfei.shard.redis.JedisShards;
-import fengfei.shard.redis.RedisComand;
+import fengfei.shard.redis.RedisCommand;
 import org.apache.commons.pool.impl.GenericObjectPool.Config;
 
 public class WriteReadMain implements Runnable {
@@ -62,8 +62,8 @@ public class WriteReadMain implements Runnable {
         JedisShards redis = new JedisShards("127.0.0.1:6379,127.0.0.1:6379", 3000, ploy, cfg);
 
         //
-        RedisComand read = redis.create(RedisComand.class);
-        RedisComand write = redis.create(RedisComand.class, Selector.Write);
+        RedisCommand read = redis.create(RedisCommand.class);
+        RedisCommand write = redis.create(RedisCommand.class, Selector.Write);
         try {
             final WriteReadService writeRead = new WriteReadService(write, read);
 

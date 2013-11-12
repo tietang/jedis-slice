@@ -7,7 +7,7 @@ import redis.clients.jedis.JedisCommands;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.PipelineBlock;
 
-public interface RedisComand extends JedisCommands, BinaryJedisCommands, JedisOtherCommands {
+public interface RedisCommand extends JedisCommands, BinaryJedisCommands, JedisOtherCommands {
 
     // , MultiKeyCommands, AdvancedJedisCommands, ScriptingCommands {
     String flushDB();

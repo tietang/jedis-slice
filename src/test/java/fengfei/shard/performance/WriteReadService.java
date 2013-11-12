@@ -5,10 +5,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.relation.RelationException;
 
+import fengfei.shard.redis.RedisCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import fengfei.shard.redis.RedisComand;
 
 public class WriteReadService {
 
@@ -19,10 +18,10 @@ public class WriteReadService {
 
     int port = 10000;
     public AtomicInteger sidGenerator = new AtomicInteger(1);
-    RedisComand write;
-    RedisComand read;
+    RedisCommand write;
+    RedisCommand read;
 
-    public WriteReadService(RedisComand write, RedisComand read) {
+    public WriteReadService(RedisCommand write, RedisCommand read) {
         super();
         this.write = write;
         this.read = read;
