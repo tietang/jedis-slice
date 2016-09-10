@@ -1,5 +1,7 @@
 #Jedis Slice for jedis java client#
 **Jedis Slice** is a slice framework for jedis.
+[![Build Status](https://travis-ci.org/tietang/jedis-slice.png?branch=master)](<https://travis-ci.org/tietang/jedis-slice>)
+
 **jedis** is a java client for Redis, as follow [jedis](https://github.com/xetorthio/jedis).
 
 #Usage#
